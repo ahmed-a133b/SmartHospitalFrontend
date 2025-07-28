@@ -1,0 +1,632 @@
+import React, { useState } from 'react';
+import { useHospitalData } from '../../../../contexts/HospitalDataContext';
+import { Plus, Search, Edit, Wifi, WifiOff, Battery, AlertTriangle, Thermometer, Droplets, Wind, User, UserCheck, UserX } from 'lucide-react';
+import { getLatestVitals, isVitalReading, isEnvironmentalReading } from '../../../../utils/deviceUtils';
+import { assignPatientToMonitor, unassignPatientFromMonitor, getAvailablePatientsForMonitor } from '../../../../api/patientMonitorAssignment';
+import DeviceForm from './DeviceForm';
+
+
+const formatTimestamp = (timestamp: string | undefined | null): string => {
+  if (!timestamp) return 'No data available';
+  
+  try {
+    // Debug: log the timestamp being processed
+    console.log('Formatting timestamp:', timestamp);
+    
+    // Handle different timestamp formats
+    let date: Date;
+    
+    // If timestamp contains underscore (backend format: YYYY-MM-DD_HH-MM-SS)
+    if (typeof timestamp === 'string' && timestamp.includes('_')) {
+      const [datePart, timePart] = timestamp.split('_');
+      const [year, month, day] = datePart.split('-');
+      const [hour, minute, second] = timePart.split('-');
+      date = new Date(
+        parseInt(year), 
+        parseInt(month) - 1, // Month is 0-indexed in JavaScript
+        parseInt(day), 
+        parseInt(hour), 
+        parseInt(minute), 
+        parseInt(second || '0') // Handle cases where seconds might be missing
+      );
+    } else {
+      // Standard ISO format or other formats
+      date = new Date(timestamp);
+    }
+    
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      console.warn('Invalid date created from timestamp:', timestamp);
+      return 'Invalid date';
+    }
+    
+    // Return formatted date with more readable format
+    const result = date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+    
+    console.log('Formatted result:', result);
+    return result;
+  } catch (error) {
+    console.error('Error formatting timestamp:', timestamp, error);
+    return 'Invalid date format';
+  }
+};
+
+// Utility function to format IDs (remove underscores, capitalize first letter)
+const formatId = (id: string): string => {
+  if (!id) return '';
+  return id
+    .replace(/_/g, ' ')
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(' ');
+};
+
+// Function to get patient name from patient ID
+const getPatientName = (patientId: string, patients: Record<string, any>): string => {
+  if (!patientId) {
+    return 'No Patient';
+  }
+  
+  if (!patients || Object.keys(patients).length === 0) {
+    return formatId(patientId);
+  }
+  
+  const patient = patients[patientId];
+  if (!patient) {
+    return formatId(patientId);
+  }
+  
+  // Try different possible structures for patient name
+  const name = patient.personalInfo?.name || 
+               patient.name || 
+               patient.personalInfo?.Name ||
+               patient.Name;
+               
+  return name || formatId(patientId);
+};
+
+const DeviceManagement: React.FC = () => {
+  const { iotDevices, patients, loading, error, refreshData } = useHospitalData();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [assigningPatient, setAssigningPatient] = useState<string | null>(null);
+  const [availablePatients, setAvailablePatients] = useState<any[]>([]);
+  const [showPatientAssignment, setShowPatientAssignment] = useState<string | null>(null);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-lg text-gray-600">Loading device data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <div className="text-lg text-red-600 mb-4">Error: {error}</div>
+        <button 
+          onClick={refreshData}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // Calculate device stats
+  const deviceStats = Object.values(iotDevices).reduce((acc, device) => {
+    const latestVitals = getLatestVitals(device);
+    if (latestVitals && latestVitals.deviceStatus) {
+      const status = latestVitals.deviceStatus as 'online' | 'offline' | 'maintenance';
+      acc[status] = (acc[status] || 0) + 1;
+    } else {
+      acc.offline = (acc.offline || 0) + 1;
+    }
+    return acc;
+  }, { online: 0, offline: 0, maintenance: 0 } as Record<'online' | 'offline' | 'maintenance', number>);
+
+  const filteredDevices = Object.entries(iotDevices).filter(([id, device]) =>
+    id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (device.deviceInfo?.type && device.deviceInfo.type.toLowerCase().includes(searchTerm.toLowerCase())) ||
+    (device.deviceInfo?.roomId && device.deviceInfo.roomId.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const getStatusColor = (status: 'online' | 'offline' | 'maintenance') => {
+    switch (status) {
+      case 'online': return 'bg-green-100 text-green-800';
+      case 'offline': return 'bg-red-100 text-red-800';
+      case 'maintenance': return 'bg-yellow-100 text-yellow-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getBatteryColor = (level: number) => {
+    if (level > 50) return 'text-green-600';
+    if (level > 20) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  // Patient assignment functions
+  const validateMonitorPatientAssignment = async (deviceId: string, patientId: string): Promise<{ valid: boolean; error?: string }> => {
+    try {
+      // Get patient information
+      const patient = patients[patientId];
+      if (!patient) {
+        return { valid: false, error: 'Patient not found' };
+      }
+
+      // Get monitor device information
+      const monitor = iotDevices[deviceId];
+      if (!monitor) {
+        return { valid: false, error: 'Monitor device not found' };
+      }
+
+      // Check if monitor is assigned to a room
+      if (!monitor.deviceInfo?.roomId) {
+        return { valid: false, error: 'Monitor is not assigned to any room' };
+      }
+
+      // Check if monitor is assigned to a specific bed
+      if (!monitor.deviceInfo?.bedId) {
+        return { valid: false, error: 'Monitor is not assigned to any bed' };
+      }
+
+      // Get patient's room and bed information
+      const patientRoomId = patient.personalInfo?.roomId;
+      const patientBedId = patient.personalInfo?.bedId;
+
+      if (!patientRoomId || !patientBedId) {
+        return { valid: false, error: 'Patient is not assigned to a room or bed' };
+      }
+
+      // Check if monitor and patient are in the same room
+      if (monitor.deviceInfo.roomId !== patientRoomId) {
+        return { 
+          valid: false, 
+          error: `Monitor is in ${formatId(monitor.deviceInfo.roomId)} but patient is in ${formatId(patientRoomId)}` 
+        };
+      }
+
+      // Check if monitor and patient are assigned to the same bed
+      if (monitor.deviceInfo.bedId !== patientBedId) {
+        return { 
+          valid: false, 
+          error: `Monitor is assigned to ${formatId(monitor.deviceInfo.bedId)} but patient is in ${formatId(patientBedId)}` 
+        };
+      }
+
+      return { valid: true };
+    } catch (error) {
+      console.error('Error validating monitor-patient assignment:', error);
+      return { valid: false, error: 'Failed to validate assignment' };
+    }
+  };
+
+  const handleAssignPatient = async (deviceId: string, patientId: string) => {
+    setAssigningPatient(deviceId);
+    try {
+      // First, validate that the monitor is attached to the patient's bed
+      const validation = await validateMonitorPatientAssignment(deviceId, patientId);
+      if (!validation.valid) {
+        alert(`Cannot assign patient: ${validation.error}`);
+        return;
+      }
+
+      const result = await assignPatientToMonitor(deviceId, patientId);
+      if (result.success) {
+        await refreshData();
+        setShowPatientAssignment(null);
+      } else {
+        alert(result.error || 'Failed to assign patient to monitor');
+      }
+    } catch (error) {
+      alert('Error assigning patient to monitor');
+      console.error(error);
+    } finally {
+      setAssigningPatient(null);
+    }
+  };
+
+  const handleUnassignPatient = async (deviceId: string) => {
+    setAssigningPatient(deviceId);
+    try {
+      const result = await unassignPatientFromMonitor(deviceId);
+      if (result.success) {
+        await refreshData();
+      } else {
+        alert(result.error || 'Failed to unassign patient from monitor');
+      }
+    } catch (error) {
+      alert('Error unassigning patient from monitor');
+      console.error(error);
+    } finally {
+      setAssigningPatient(null);
+    }
+  };
+
+  const showPatientAssignmentModal = async (deviceId: string) => {
+    try {
+      const patientsData = await getAvailablePatientsForMonitor(deviceId);
+      
+      // Add validation status to each patient
+      const patientsWithValidation = await Promise.all(
+        (patientsData.availablePatients || []).map(async (patient: any) => {
+          const validation = await validateMonitorPatientAssignment(deviceId, patient.patientId);
+          return {
+            ...patient,
+            isValidForAssignment: validation.valid,
+            validationError: validation.error
+          };
+        })
+      );
+      
+      setAvailablePatients(patientsWithValidation);
+      setShowPatientAssignment(deviceId);
+    } catch (error) {
+      alert('Error fetching available patients');
+      console.error(error);
+    }
+  };
+
+  const StatusIcon = ({ status }: { status: 'online' | 'offline' | 'maintenance' }) => {
+    switch (status) {
+      case 'online':
+        return <Wifi className="h-4 w-4 text-green-600" />;
+      case 'offline':
+        return <WifiOff className="h-4 w-4 text-red-600" />;
+      default:
+        return <AlertTriangle className="h-4 w-4 text-yellow-600" />;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-gray-900">IoT Device Management</h1>
+        <button 
+          onClick={() => setShowAddForm(true)}
+          className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+        >
+          <Plus className="h-5 w-5" />
+          <span>Add Device</span>
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+        <input
+          type="text"
+          placeholder="Search devices by ID, type, or room..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-sm font-medium text-gray-600">Total Devices</h3>
+          <p className="text-2xl font-bold text-gray-900">{Object.keys(iotDevices).length}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-sm font-medium text-gray-600">Online</h3>
+          <p className="text-2xl font-bold text-green-600">{deviceStats.online}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-sm font-medium text-gray-600">Offline</h3>
+          <p className="text-2xl font-bold text-red-600">{deviceStats.offline}</p>
+        </div>
+        <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <h3 className="text-sm font-medium text-gray-600">Maintenance</h3>
+          <p className="text-2xl font-bold text-yellow-600">{deviceStats.maintenance}</p>
+        </div>
+      </div>
+
+      {/* Devices Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredDevices.map(([id, device]) => {
+          const latestVitals = getLatestVitals(device);
+          const activeAlerts = device.alerts ? Object.values(device.alerts).filter(alert => !alert.resolved) : [];
+          const currentPatientId = device.deviceInfo?.currentPatientId;
+          const isVitalsMonitor = device.deviceInfo?.type === 'vitals_monitor';
+          
+          return (
+            <div key={id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+              <div className="p-4 border-b border-gray-200">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{formatId(id)}</h3>
+                    <p className="text-sm text-gray-600">
+                      {device.deviceInfo?.manufacturer || 'Unknown'} {device.deviceInfo?.model || 'Unknown'}
+                    </p>
+                    
+                  </div>
+                  {isVitalsMonitor && (
+                    <div className="flex items-center space-x-1">
+                      {currentPatientId ? (
+                        <div className="flex items-center text-green-600 text-xs bg-green-50 px-2 py-1 rounded-full">
+                          <UserCheck className="h-3 w-3 mr-1" />
+                          Assigned
+                        </div>
+                      ) : (
+                        <div className="flex items-center text-gray-400 text-xs bg-gray-50 px-2 py-1 rounded-full">
+                          <UserX className="h-3 w-3 mr-1" />
+                          No Patient
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  
+                </div>
+
+                {/* Battery Level */}
+                {latestVitals && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-600"></span>
+                    <div className="flex items-center space-x-2">
+                      <Battery className={`h-4 w-4 ${getBatteryColor(latestVitals.batteryLevel)}`} />
+                      <span className={`text-sm font-medium ${getBatteryColor(latestVitals.batteryLevel)}`}>
+                        {latestVitals.batteryLevel}%
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              
+
+              <div className="p-4 space-y-3">
+                
+                {/* Status */}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">Status:</span>
+                  <div className="flex items-center space-x-2">
+                    <StatusIcon status={latestVitals?.deviceStatus || 'offline'} />
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(latestVitals?.deviceStatus || 'offline')}`}>
+                      {latestVitals?.deviceStatus || 'offline'}
+                    </span>
+                  </div>
+                </div>
+
+                
+
+                {/* Location */}
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">Location:</span>
+                  <div className="text-right">
+                    <span className="text-sm text-gray-900">
+                      {device.deviceInfo?.roomId 
+                        ? `Room ${device.deviceInfo.roomId.split('_')[1]}` 
+                        : 'No room assigned'
+                      }
+                    </span>
+                    {device.deviceInfo?.bedId && (
+                      <div className="text-xs text-gray-500">
+                        Bed {device.deviceInfo.bedId.split('_')[1]}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Patient Assignment for Vitals Monitors */}
+                {isVitalsMonitor && (
+                  <div className="space-y-2">
+                    <span className="text-sm font-medium text-gray-600">Patient:</span>
+                    {currentPatientId ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <UserCheck className="h-4 w-4 text-green-600" />
+                            <span className="text-sm font-medium text-gray-900">
+                              {getPatientName(currentPatientId, patients)}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => handleUnassignPatient(id)}
+                            disabled={assigningPatient === id}
+                            className="text-red-600 hover:text-red-800 text-xs px-3 py-1 bg-white border border-red-200 rounded-md hover:bg-red-50 transition-colors"
+                          >
+                            {assigningPatient === id ? 'Detaching...' : 'Detach'}
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <UserX className="h-4 w-4 text-gray-400" />
+                            <span className="text-sm text-gray-600">No patient assigned</span>
+                          </div>
+                          <button
+                            onClick={() => showPatientAssignmentModal(id)}
+                            disabled={assigningPatient === id}
+                            className="text-blue-600 hover:text-blue-800 text-xs px-3 py-1 bg-blue-50 border border-blue-200 rounded-md hover:bg-blue-100 transition-colors"
+                          >
+                            {assigningPatient === id ? 'Assigning...' : 'Assign'}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                
+
+                {/* Latest Readings */}
+                {latestVitals?.deviceStatus === 'online' && (
+                  <div className="pt-2 border-t border-gray-100">
+                    <p className="text-sm font-medium text-gray-600 mb-2">Latest Readings:</p>
+                    {device.deviceInfo?.type === 'environmental_sensor' && isEnvironmentalReading(latestVitals) ? (
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div className="flex items-center space-x-1">
+                          <Thermometer className="h-3 w-3 text-red-500" />
+                          <span>{latestVitals.temperature.toFixed(1)}°C</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Droplets className="h-3 w-3 text-blue-500" />
+                          <span>{latestVitals.humidity}% RH</span>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <Wind className="h-3 w-3 text-green-500" />
+                          <span>AQ: {latestVitals.airQuality}</span>
+                        </div>
+                        <div>CO2: {latestVitals.co2Level} ppm</div>
+                      </div>
+                    ) : isVitalReading(latestVitals) ? (
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>HR: {latestVitals.heartRate} bpm</div>
+                        <div>O2: {latestVitals.oxygenLevel.toFixed(1)}%</div>
+                        <div>Temp: {latestVitals.temperature.toFixed(1)}°C</div>
+                        <div>BP: {latestVitals.bloodPressure.systolic.toFixed(1)}/{latestVitals.bloodPressure.diastolic.toFixed(1)}</div>
+                      </div>
+                    ) : (
+                      <div className="text-xs text-gray-500">No readings available</div>
+                    )}
+                  </div>
+                )}
+
+                {/* Active Alerts */}
+                {activeAlerts.length > 0 ? (
+                  <div className="pt-2 border-t border-gray-100">
+                    <div className="flex items-center space-x-2 text-red-600">
+                      <AlertTriangle className="h-4 w-4" />
+                      <span className="text-sm font-medium">
+                        {activeAlerts.length} active alert(s)
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="pt-2 border-t border-gray-100">
+                    <div className="flex items-center space-x-2 text-gray-400">
+                      <span className="text-sm font-medium">No alerts</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Last Calibrated */}
+                <div className="flex justify-between items-center text-xs text-gray-500">
+                  <span>Last calibrated:</span>
+                  <span>{formatTimestamp(device.deviceInfo?.lastCalibrated)}</span>
+                </div>
+
+                {/* Actions */}
+                <div className="flex justify-between items-center pt-2">
+                  <button className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                    View Details
+                  </button>
+                  <div className="flex space-x-2">
+                    <button className="text-gray-600 hover:text-gray-800">
+                      <Edit className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Add Device Form */}
+      {showAddForm && (
+        <DeviceForm onClose={() => setShowAddForm(false)} />
+      )}
+
+      {/* Patient Assignment Modal */}
+      {showPatientAssignment && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-lg max-w-md w-full mx-4">
+            <div className="p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Assign Patient to Monitor
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Select a patient to assign to monitor {formatId(showPatientAssignment)}
+              </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4">
+                <div className="flex items-start space-x-2">
+                  <div className="text-blue-600 mt-0.5">ℹ️</div>
+                  <div className="text-sm text-blue-800">
+                    <strong>Safety Check:</strong> Patients can only be assigned to monitors that are attached to their bed.
+                    Invalid assignments are disabled and marked with error details.
+                  </div>
+                </div>
+              </div>
+              
+              {availablePatients.length > 0 ? (
+                <div className="space-y-2 max-h-60 overflow-y-auto">
+                  {availablePatients.map((patient) => (
+                    <button
+                      key={patient.patientId}
+                      onClick={() => handleAssignPatient(showPatientAssignment, patient.patientId)}
+                      disabled={assigningPatient === showPatientAssignment || !patient.isValidForAssignment}
+                      className={`w-full text-left p-3 border rounded-lg transition-colors ${
+                        patient.isValidForAssignment
+                          ? 'border-gray-200 hover:bg-blue-50 hover:border-blue-300'
+                          : 'border-red-200 bg-red-50 cursor-not-allowed opacity-60'
+                      } ${
+                        assigningPatient === showPatientAssignment ? 'opacity-50 cursor-not-allowed' : ''
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <div className="font-medium text-gray-900">{patient.name}</div>
+                          <div className="text-sm text-gray-600">
+                            Room: {formatId(patient.roomId)} {patient.bedId && `| Bed: ${formatId(patient.bedId)}`}
+                          </div>
+                          {!patient.isValidForAssignment && patient.validationError && (
+                            <div className="text-xs text-red-600 mt-1 font-medium">
+                              ⚠️ {patient.validationError}
+                            </div>
+                          )}
+                        </div>
+                        {patient.isValidForAssignment ? (
+                          <div className="text-green-600 text-xs ml-2">
+                            ✓ Valid
+                          </div>
+                        ) : (
+                          <div className="text-red-600 text-xs ml-2">
+                            ✗ Invalid
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 text-gray-500">
+                  <User className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                  <p>No available patients found</p>
+                  <p className="text-xs mt-1">Patients must be in the same room/bed as the monitor</p>
+                </div>
+              )}
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => setShowPatientAssignment(null)}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DeviceManagement;
