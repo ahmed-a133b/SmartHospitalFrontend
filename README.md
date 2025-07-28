@@ -86,7 +86,6 @@ A comprehensive digital twin dashboard for smart hospital management featuring r
    Create a `.env` file in the root directory:
    ```env
    VITE_API_BASE_URL=your_backend_api_url
-   VITE_FIREBASE_CONFIG=your_firebase_config
    ```
 
 4. **Start development server**
@@ -175,10 +174,6 @@ src/
 # API Configuration
 VITE_API_BASE_URL=http://localhost:8000
 
-# Firebase Configuration (if using Firebase)
-VITE_FIREBASE_API_KEY=your_firebase_api_key
-VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
-VITE_FIREBASE_DATABASE_URL=https://your_project.firebaseio.com
 ```
 
 ### Build Configuration
