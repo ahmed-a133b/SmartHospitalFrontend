@@ -1,6 +1,10 @@
 // Base URL for the backend API
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
 
+// Debug: Log the API URL (remove this in production)
+console.log('🔗 API_BASE_URL:', API_BASE_URL);
+console.log('🌍 Environment:', import.meta.env.MODE);
+
 // Common headers for API requests
 export const DEFAULT_HEADERS = {
     'Content-Type': 'application/json',
