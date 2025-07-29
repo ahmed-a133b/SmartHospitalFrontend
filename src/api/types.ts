@@ -119,3 +119,10 @@ export interface IoTDevice {
     assignedTo?: string;
   }>;
 } 
+
+
+// Add Web Speech API types to the window object
+export interface Window {
+  SpeechRecognition: any;
+  webkitSpeechRecognition: any;
+}

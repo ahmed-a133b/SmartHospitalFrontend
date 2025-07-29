@@ -10,6 +10,7 @@ import AlertsManagement from '../components/admin/AlertsManagement';
 import TestSimpleAlert from '../components/admin/TestSimpleAlert';
 import Analytics from '../components/admin/Analytics';
 import Settings from '../components/admin/Settings';
+import SmartQueryChat from '../components/SmartQuery/SmartQueryChat';
 
 interface AdminDashboardProps {
   activeView: string;
@@ -264,6 +265,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ activeView }) => {
       case 'analytics':
         console.log('Rendering Analytics component');
         return <Analytics />;
+      case 'assistant':
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold text-gray-900">Smart Hospital Assistant</h1>
+              <div className="text-sm text-gray-500">
+                Ask me about patients, rooms, or alerts
+              </div>
+            </div>
+            <SmartQueryChat />
+          </div>
+        );
       case 'settings':
         console.log('Rendering Settings component');
         return <Settings />;

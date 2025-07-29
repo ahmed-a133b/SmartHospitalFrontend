@@ -6,6 +6,7 @@ import StaffSchedule from '../components/staff/StaffSchedule';
 import RoomStatus from '../components/staff/RoomStatus';
 import AssignedPatients from '../components/staff/AssignedPatients';
 import TaskList from '../components/staff/TaskList';
+import SmartQueryChat from '../components/SmartQuery/SmartQueryChat';
 
 interface StaffDashboardProps {
   activeView: string;
@@ -184,6 +185,18 @@ const StaffDashboard: React.FC<StaffDashboardProps> = ({ activeView }) => {
         return <AssignedPatients patients={assignedPatients} />;
       case 'tasks':
         return <TaskList staffId={currentStaffId} />;
+      case 'assistant':
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h1 className="text-2xl font-bold text-gray-900">Smart Assistant</h1>
+              <div className="text-sm text-gray-500">
+                Ask me about your schedule, rooms, or patient assignments
+              </div>
+            </div>
+            <SmartQueryChat />
+          </div>
+        );
       default:
         return <div>View not found</div>;
     }

@@ -20,7 +20,7 @@ interface RoomData {
 }
 
 const RoomForm: React.FC<RoomFormProps> = ({ roomId, onClose }) => {
-  const { patients, iotDevices, addRoom, updateRoom, refreshData } = useHospitalData();
+  const { patients, iotDevices, addRoom, updateRoom, refreshAlertsOnly } = useHospitalData();
   const { getRoomBeds, assignPatientToBed, dischargePatientFromBed } = useBeds();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -155,7 +155,7 @@ const RoomForm: React.FC<RoomFormProps> = ({ roomId, onClose }) => {
       // Refresh both bed data and IoT devices data to reflect changes
       await Promise.all([
         loadRoomBeds(),
-        refreshData() // This will refresh the IoT devices context
+        refreshAlertsOnly() // Only refresh IoT devices instead of all data
       ]);
       
     } catch (err) {
@@ -200,7 +200,7 @@ const RoomForm: React.FC<RoomFormProps> = ({ roomId, onClose }) => {
       // Refresh data
       await Promise.all([
         loadRoomBeds(),
-        refreshData()
+        refreshAlertsOnly() // Only refresh IoT devices instead of all data
       ]);
 
     } catch (err) {
@@ -231,7 +231,7 @@ const RoomForm: React.FC<RoomFormProps> = ({ roomId, onClose }) => {
         // Refresh both bed data and IoT devices data
         await Promise.all([
           loadRoomBeds(),
-          refreshData()
+          refreshAlertsOnly() // Only refresh IoT devices instead of all data
         ]);
       } else {
         throw new Error(result.error || 'Failed to assign patient to bed');
@@ -454,7 +454,7 @@ const RoomForm: React.FC<RoomFormProps> = ({ roomId, onClose }) => {
       // Refresh data
       await Promise.all([
         loadRoomBeds(),
-        refreshData()
+        refreshAlertsOnly() // Only refresh IoT devices instead of all data
       ]);
 
     } catch (err) {
@@ -510,7 +510,7 @@ const RoomForm: React.FC<RoomFormProps> = ({ roomId, onClose }) => {
       // Refresh data
       await Promise.all([
         loadRoomBeds(),
-        refreshData()
+        refreshAlertsOnly() // Only refresh IoT devices instead of all data
       ]);
 
     } catch (err) {

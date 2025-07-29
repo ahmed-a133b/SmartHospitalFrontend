@@ -1,28 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useHospitalData } from '../../contexts/HospitalDataContext';
 import { Bell, LogOut, User, AlertTriangle, RefreshCw } from 'lucide-react';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
-  const { getActiveAlerts, refreshData } = useHospitalData();
+  const { getActiveAlerts, refreshAlertsOnly } = useHospitalData();
   const activeAlerts = getActiveAlerts();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
-  // Auto-refresh every 30 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setLastRefresh(new Date());
-    }, 30000);
-
-    return () => clearInterval(interval);
-  }, []);
+  // Remove auto-refresh from Header since context handles it
+  // Auto-refresh is now handled by HospitalDataContext with reduced frequency
 
   const handleManualRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await refreshData();
+      await refreshAlertsOnly(); // Only refresh alerts instead of all data
       setLastRefresh(new Date());
     } catch (error) {
       console.error('Failed to refresh data:', error);

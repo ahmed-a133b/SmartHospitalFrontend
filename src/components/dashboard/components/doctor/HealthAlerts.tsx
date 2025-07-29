@@ -4,7 +4,7 @@ import { AlertTriangle, Heart, CheckCircle, RefreshCw, X, User, MapPin, Calendar
 import { Patient } from '../../../../api/types';
 
 const HealthAlerts: React.FC = () => {
-  const { getActiveAlerts, getCriticalPatients, refreshData } = useHospitalData();
+  const { getActiveAlerts, getCriticalPatients, refreshAlertsOnly } = useHospitalData();
   const [filter, setFilter] = useState('all');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
@@ -72,18 +72,18 @@ const HealthAlerts: React.FC = () => {
       }
     });
 
-  // Auto-refresh every 30 seconds
+  // Auto-refresh every 60 seconds (reduced from 30 seconds)
   useEffect(() => {
     const interval = setInterval(() => {
       handleAutoRefresh();
-    }, 30000);
+    }, 60000); // Increased from 30000 to 60000 (60 seconds)
 
     return () => clearInterval(interval);
   }, []);
 
   const handleAutoRefresh = async () => {
     try {
-      await refreshData();
+      await refreshAlertsOnly(); // Only refresh alerts instead of all data
       setLastRefresh(new Date());
       console.log('🔄 HealthAlerts: Auto-refreshed data');
     } catch (error) {
@@ -94,7 +94,7 @@ const HealthAlerts: React.FC = () => {
   const handleManualRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await refreshData();
+      await refreshAlertsOnly(); // Only refresh alerts instead of all data
       setLastRefresh(new Date());
       console.log('🔄 HealthAlerts: Manual refresh completed');
     } catch (error) {
@@ -269,7 +269,7 @@ const HealthAlerts: React.FC = () => {
             </div>
             <div className="text-xs text-gray-500 text-right">
               <div>Auto-refresh</div>
-              <div>30s interval</div>
+              <div>60s interval</div>
             </div>
           </div>
         </div>

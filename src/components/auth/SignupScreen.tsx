@@ -73,15 +73,59 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ onSwitchToLogin }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center">
-            <Building2 className="h-8 w-8 text-white" />
-          </div>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">Join Smart Hospital</h2>
-          <p className="mt-2 text-sm text-gray-600">Create your staff account</p>
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      {/* Dynamic Animated Background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        {/* Floating Circles Animation with Enhanced Glow */}
+        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob glow-blue"></div>
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000 glow-purple"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000 glow-blue"></div>
+        
+        {/* Additional Glowing Orbs */}
+        <div className="absolute top-20 right-20 w-32 h-32 bg-green-300 rounded-full mix-blend-multiply filter blur-lg opacity-60 animate-blob glow-green" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute bottom-32 right-32 w-48 h-48 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob glow-purple" style={{ animationDelay: '3s' }}></div>
+        
+        {/* Animated Grid Pattern */}
+        <div className="absolute inset-0 opacity-20 animate-shimmer">
+          <div className="absolute inset-0" style={{
+            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.5) 1px, transparent 0)`,
+            backgroundSize: '20px 20px'
+          }}></div>
         </div>
+        
+        {/* Enhanced Floating Medical Icons with Glow */}
+        <div className="absolute top-20 left-20 animate-float glow-green">
+          <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center opacity-80 shadow-lg">
+            <span className="text-white text-xs font-bold">+</span>
+          </div>
+        </div>
+        <div className="absolute top-40 right-32 animate-float glow-blue" style={{ animationDelay: '1s' }}>
+          <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full flex items-center justify-center opacity-80 shadow-lg">
+            <span className="text-white text-xs">⚡</span>
+          </div>
+        </div>
+        <div className="absolute bottom-32 left-40 animate-float glow-purple" style={{ animationDelay: '2s' }}>
+          <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center opacity-80 shadow-lg">
+            <span className="text-white text-xs">💊</span>
+          </div>
+        </div>
+        <div className="absolute bottom-20 right-20 animate-float glow-blue" style={{ animationDelay: '3s' }}>
+          <div className="w-7 h-7 bg-gradient-to-r from-indigo-400 to-blue-500 rounded-full flex items-center justify-center opacity-80 shadow-lg">
+            <span className="text-white text-xs">🏥</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-md w-full space-y-8 relative z-10">
+        {/* Glassmorphism Card */}
+        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
+          <div className="text-center">
+            <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg animate-pulse-slow">
+              <Building2 className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="mt-6 text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">Join Smart Hospital</h2>
+            <p className="mt-2 text-sm text-gray-600">Create your staff account</p>
+          </div>
 
         <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
           <div className="grid grid-cols-2 gap-4">
@@ -289,6 +333,7 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ onSwitchToLogin }) => {
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );

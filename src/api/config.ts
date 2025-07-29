@@ -1,9 +1,24 @@
 // Base URL for the backend API
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+// Feature flags
+export const FEATURES = {
+  VOICE_RECOGNITION: true,
+  ADVANCED_QUERY: true
+};
 
-// Debug: Log the API URL (remove this in production)
-console.log('🔗 API_BASE_URL:', API_BASE_URL);
-console.log('🌍 Environment:', import.meta.env.MODE);
+// Speech recognition configuration
+export const SPEECH_RECOGNITION_CONFIG = {
+  language: 'en-US',
+  continuous: true,
+  interimResults: true
+};
+
+// Types of supported queries
+export const QUERY_TYPES = {
+  PATIENT_STATUS: ['critical', 'stable', 'recovering', 'discharged'],
+  ROOM_STATUS: ['occupied', 'available', 'maintenance'],
+  ALERT_PRIORITY: ['high', 'medium', 'low']
+};
 
 // Common headers for API requests
 export const DEFAULT_HEADERS = {

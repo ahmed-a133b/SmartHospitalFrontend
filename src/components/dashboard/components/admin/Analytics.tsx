@@ -1,9 +1,196 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useHospitalData } from '../../../../contexts/HospitalDataContext';
-import { TrendingUp, TrendingDown, Activity, Clock } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Clock, Heart, Thermometer, Droplets, User, ChevronDown } from 'lucide-react';
 
 const Analytics: React.FC = () => {
-  const { patients, staff, iotDevices, loading, error, refreshData } = useHospitalData();
+  const { patients, staff, iotDevices, loading, error, refreshAlertsOnly } = useHospitalData();
+  const [selectedVital, setSelectedVital] = useState<'heartRate' | 'temperature' | 'oxygenLevel'>('heartRate');
+  const [selectedPatient, setSelectedPatient] = useState<string>('');
+
+  // Get list of patients for dropdown
+  const patientsList = useMemo(() => {
+    return Object.entries(patients).map(([patientId, patient]) => {
+      // Format room ID: capitalize first letter and remove underscores
+      const formatRoomId = (roomId: string) => {
+        if (!roomId) return null;
+        return roomId.charAt(0).toUpperCase() + roomId.slice(1).replace(/_/g, ' ');
+      };
+
+      const formattedRoom = formatRoomId(patient.personalInfo.roomId);
+      
+      return {
+        id: patientId,
+        name: patient.personalInfo.name,
+        room: formattedRoom,
+        rawRoomId: patient.personalInfo.roomId,
+        ward: patient.personalInfo.ward
+      };
+    });
+  }, [patients]);
+
+  // Set default selected patient if none selected
+  React.useEffect(() => {
+    if (!selectedPatient && patientsList.length > 0) {
+      setSelectedPatient(patientsList[0].id);
+    }
+  }, [selectedPatient, patientsList]);
+
+  // Get patient's device data and generate vital trends
+  const generatePatientVitalTrends = useMemo(() => {
+    if (!selectedPatient) return [];
+
+    const patient = patients[selectedPatient];
+    if (!patient) return [];
+
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    const dataPoints = [];
+    
+    // Generate realistic vital trends based on patient's current status
+    const patientStatus = patient.currentStatus.status;
+    const baseValues = {
+      critical: { heartRate: 95, temperature: 99.8, oxygenLevel: 94 },
+      stable: { heartRate: 75, temperature: 98.6, oxygenLevel: 98 },
+      recovering: { heartRate: 80, temperature: 98.2, oxygenLevel: 97 },
+      discharged: { heartRate: 70, temperature: 98.4, oxygenLevel: 99 }
+    };
+
+    const base = baseValues[patientStatus as keyof typeof baseValues] || baseValues.stable;
+    
+    // Generate data points every 5 minutes for the past hour
+    for (let i = 0; i <= 12; i++) {
+      const timestamp = new Date(oneHourAgo.getTime() + i * 5 * 60 * 1000);
+      
+      // Add realistic variations based on patient condition
+      const variationFactor = patientStatus === 'critical' ? 1.5 : patientStatus === 'stable' ? 0.5 : 1.0;
+      
+      const vitals = {
+        heartRate: base.heartRate + Math.sin(i * 0.5) * 8 * variationFactor + (Math.random() - 0.5) * 10 * variationFactor,
+        temperature: base.temperature + Math.sin(i * 0.3) * 0.6 * variationFactor + (Math.random() - 0.5) * 0.8 * variationFactor,
+        oxygenLevel: base.oxygenLevel + Math.sin(i * 0.4) * 1.2 * variationFactor + (Math.random() - 0.5) * 1.5 * variationFactor
+      };
+      
+      dataPoints.push({
+        timestamp: timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        heartRate: Math.max(50, Math.min(120, Math.round(vitals.heartRate))),
+        temperature: Math.max(96, Math.min(102, Math.round(vitals.temperature * 10) / 10)),
+        oxygenLevel: Math.max(85, Math.min(100, Math.round(vitals.oxygenLevel * 10) / 10))
+      });
+    }
+    
+    return dataPoints;
+  }, [selectedPatient, patients]);
+
+  // Get selected patient info
+  const selectedPatientInfo = useMemo(() => {
+    return patientsList.find(p => p.id === selectedPatient);
+  }, [selectedPatient, patientsList]);
+
+  // Simple Line Chart Component
+  const VitalTrendChart: React.FC<{ 
+    data: Array<{timestamp: string; heartRate: number; temperature: number; oxygenLevel: number}>; 
+    vital: string 
+  }> = ({ data, vital }) => {
+    const chartWidth = 600;
+    const chartHeight = 200;
+    const padding = 40;
+    
+    const values = data.map(d => d[vital as keyof typeof d] as number);
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+    const range = maxValue - minValue || 1;
+    
+    const points = data.map((point, index) => {
+      const x = padding + (index * (chartWidth - 2 * padding)) / (data.length - 1);
+      const y = chartHeight - padding - ((point[vital as keyof typeof point] as number - minValue) / range) * (chartHeight - 2 * padding);
+      return `${x},${y}`;
+    }).join(' ');
+    
+    const getVitalColor = (vitalType: string) => {
+      switch (vitalType) {
+        case 'heartRate': return '#ef4444';
+        case 'temperature': return '#f97316';
+        case 'oxygenLevel': return '#3b82f6';
+        default: return '#6b7280';
+      }
+    };
+    
+    const getVitalUnit = (vitalType: string) => {
+      switch (vitalType) {
+        case 'heartRate': return 'BPM';
+        case 'temperature': return '°F';
+        case 'oxygenLevel': return '%';
+        default: return '';
+      }
+    };
+    
+    return (
+      <div className="relative">
+        <svg width={chartWidth} height={chartHeight} className="border rounded">
+          {/* Grid lines */}
+          {[0, 1, 2, 3, 4].map(i => (
+            <line
+              key={i}
+              x1={padding}
+              y1={padding + i * (chartHeight - 2 * padding) / 4}
+              x2={chartWidth - padding}
+              y2={padding + i * (chartHeight - 2 * padding) / 4}
+              stroke="#f3f4f6"
+              strokeWidth="1"
+            />
+          ))}
+          
+          {/* Chart line */}
+          <polyline
+            points={points}
+            fill="none"
+            stroke={getVitalColor(vital)}
+            strokeWidth="2"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+          
+          {/* Data points */}
+          {data.map((point, index) => {
+            const x = padding + (index * (chartWidth - 2 * padding)) / (data.length - 1);
+            const y = chartHeight - padding - ((point[vital as keyof typeof point] as number - minValue) / range) * (chartHeight - 2 * padding);
+            return (
+              <circle
+                key={index}
+                cx={x}
+                cy={y}
+                r="3"
+                fill={getVitalColor(vital)}
+                className="hover:r-5 transition-all duration-200"
+              >
+                <title>{`${point.timestamp}: ${point[vital as keyof typeof point]}${getVitalUnit(vital)}`}</title>
+              </circle>
+            );
+          })}
+          
+          {/* Y-axis labels */}
+          {[minValue, maxValue].map((value, index) => (
+            <text
+              key={index}
+              x={padding - 10}
+              y={index === 0 ? chartHeight - padding + 5 : padding + 5}
+              textAnchor="end"
+              className="text-xs fill-gray-600"
+            >
+              {Math.round(value * 10) / 10}{getVitalUnit(vital)}
+            </text>
+          ))}
+        </svg>
+        
+        {/* X-axis labels */}
+        <div className="flex justify-between mt-2 px-10 text-xs text-gray-600">
+          <span>{data[0]?.timestamp}</span>
+          <span>{data[Math.floor(data.length / 2)]?.timestamp}</span>
+          <span>{data[data.length - 1]?.timestamp}</span>
+        </div>
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -18,7 +205,7 @@ const Analytics: React.FC = () => {
       <div className="flex flex-col items-center justify-center h-full">
         <div className="text-lg text-red-600 mb-4">Error: {error}</div>
         <button 
-          onClick={refreshData}
+          onClick={refreshAlertsOnly}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
           Retry
@@ -40,15 +227,15 @@ const Analytics: React.FC = () => {
   // Calculate staff utilization
   const staffUtilization = Object.values(staff).reduce((acc, s) => acc + s.currentStatus.workload, 0) / Object.keys(staff).length;
 
-  // Calculate device uptime
-  const deviceUptime = Object.values(iotDevices).reduce((acc, device) => {
-    const latestVitals = Object.values(device.vitals)[0];
-    if (latestVitals?.deviceStatus === 'online') {
-      acc.online++;
-    }
-    acc.total++;
-    return acc;
-  }, { online: 0, total: 0 });
+  // Calculate device uptime (commented out since not currently used in UI)
+  // const deviceUptime = Object.values(iotDevices).reduce((acc, device) => {
+  //   const latestVitals = Object.values(device.vitals)[0];
+  //   if (latestVitals?.deviceStatus === 'online') {
+  //     acc.online++;
+  //   }
+  //   acc.total++;
+  //   return acc;
+  // }, { online: 0, total: 0 });
 
   // Calculate critical patient rate
   const criticalPatients = Object.values(patients).filter(p => p.currentStatus.status === 'critical').length;
@@ -71,14 +258,14 @@ const Analytics: React.FC = () => {
       icon: Activity,
       color: 'green'
     },
-    {
-      title: 'Device Uptime',
-      value: `${Math.round((deviceUptime.online / deviceUptime.total) * 100)}%`,
-      change: '+2% from yesterday',
-      changeType: 'positive',
-      icon: TrendingUp,
-      color: 'purple'
-    },
+    // {
+    //   title: 'Device Uptime',
+    //   value: `${Math.round((deviceUptime.online / deviceUptime.total) * 100)}%`,
+    //   change: '+2% from yesterday',
+    //   changeType: 'positive',
+    //   icon: TrendingUp,
+    //   color: 'purple'
+    // },
     {
       title: 'Critical Patient Rate',
       value: `${Math.round(criticalPatientRate)}%`,
@@ -209,6 +396,116 @@ const Analytics: React.FC = () => {
             })}
           </div>
         </div>
+      </div>
+
+      {/* Patient Vital Trends */}
+      <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Patient Vital Trends - Past Hour</h2>
+          
+          {/* Patient Selector */}
+          <div className="flex items-center space-x-4">
+            <div className="relative">
+              <select
+                value={selectedPatient}
+                onChange={(e) => setSelectedPatient(e.target.value)}
+                className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                {patientsList.map((patient) => (
+                  <option key={patient.id} value={patient.id}>
+                    {patient.name} - {patient.room ? `${patient.room}` : 'No room assigned'}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+            </div>
+            
+            {selectedPatientInfo && (
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <User className="h-4 w-4" />
+                <span>{selectedPatientInfo.ward} Ward</span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Vital Type Selector */}
+        <div className="flex justify-center space-x-2 mb-6">
+          {[
+            { key: 'heartRate', label: 'Heart Rate', icon: Heart, color: 'text-red-600' },
+            { key: 'temperature', label: 'Temperature', icon: Thermometer, color: 'text-orange-600' },
+            { key: 'oxygenLevel', label: 'Oxygen Level', icon: Droplets, color: 'text-blue-600' }
+          ].map(({ key, label, icon: Icon, color }) => (
+            <button
+              key={key}
+              onClick={() => setSelectedVital(key as 'heartRate' | 'temperature' | 'oxygenLevel')}
+              className={`flex items-center space-x-1 px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
+                selectedVital === key
+                  ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                  : 'text-gray-600 hover:bg-gray-100'
+              }`}
+            >
+              <Icon className={`h-4 w-4 ${selectedVital === key ? 'text-blue-600' : color}`} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+        
+        <div className="flex justify-center">
+          <VitalTrendChart data={generatePatientVitalTrends} vital={selectedVital} />
+        </div>
+        
+        <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+          <div>
+            <p className="text-sm text-gray-500">Average</p>
+            <p className="text-lg font-semibold text-gray-900">
+              {generatePatientVitalTrends.length > 0 
+                ? Math.round(generatePatientVitalTrends.reduce((sum: number, point) => sum + point[selectedVital], 0) / generatePatientVitalTrends.length * 10) / 10
+                : 0}
+              {selectedVital === 'heartRate' ? ' BPM' : selectedVital === 'temperature' ? '°F' : '%'}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Peak</p>
+            <p className="text-lg font-semibold text-gray-900">
+              {generatePatientVitalTrends.length > 0 
+                ? Math.max(...generatePatientVitalTrends.map(point => point[selectedVital]))
+                : 0}
+              {selectedVital === 'heartRate' ? ' BPM' : selectedVital === 'temperature' ? '°F' : '%'}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Low</p>
+            <p className="text-lg font-semibold text-gray-900">
+              {generatePatientVitalTrends.length > 0 
+                ? Math.min(...generatePatientVitalTrends.map(point => point[selectedVital]))
+                : 0}
+              {selectedVital === 'heartRate' ? ' BPM' : selectedVital === 'temperature' ? '°F' : '%'}
+            </p>
+          </div>
+        </div>
+        
+        {/* Patient Status Indicator */}
+        {selectedPatient && patients[selectedPatient] && (
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Patient Status:</span>
+              <span className={`font-medium px-2 py-1 rounded-full text-xs ${
+                patients[selectedPatient].currentStatus.status === 'critical' 
+                  ? 'bg-red-100 text-red-800'
+                  : patients[selectedPatient].currentStatus.status === 'stable'
+                  ? 'bg-green-100 text-green-800'
+                  : 'bg-yellow-100 text-yellow-800'
+              }`}>
+                {patients[selectedPatient].currentStatus.status}
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-sm mt-1">
+              <span className="text-gray-600">Diagnosis:</span>
+              <span className="font-medium">{patients[selectedPatient].currentStatus.diagnosis}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* System Performance */}

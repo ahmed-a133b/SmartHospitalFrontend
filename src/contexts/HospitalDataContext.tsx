@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { usePatients } from '../api/hooks/usePatients';
 import { useIoT } from '../api/hooks/useIoT';
 import { useStaff } from '../api/hooks/useStaff';
@@ -37,6 +37,7 @@ interface HospitalDataContextType {
   getCriticalPatients: () => Patient[];
   getActiveAlerts: () => Array<{ deviceId: string; alertId: string; alert: IoTDevice['alerts'][string] }>;
   refreshData: () => Promise<void>;
+  refreshAlertsOnly: () => Promise<void>;
 }
 
 const HospitalDataContext = createContext<HospitalDataContextType | undefined>(undefined);
@@ -75,7 +76,7 @@ export const HospitalDataProvider: React.FC<{ children: ReactNode }> = ({ childr
   } = useStaff();
 
   const {
-    alerts,
+    // alerts, // Removed since not used directly
     loading: alertsLoading,
     error: alertsError,
     getAlerts,
@@ -98,18 +99,18 @@ export const HospitalDataProvider: React.FC<{ children: ReactNode }> = ({ childr
     refreshData();
   }, []);
 
-  // Set up periodic refresh for alerts every 30 seconds
+  // Set up periodic refresh for alerts only every 60 seconds (reduced frequency)
   useEffect(() => {
     const alertRefreshInterval = setInterval(() => {
-      console.log('🔄 HospitalDataContext: Refreshing alerts data...');
-      getDevices(); // Refresh IoT devices which includes alerts
-      getAlerts(); // Refresh alerts data
-    }, 30000); // 30 seconds
+      console.log('🔄 HospitalDataContext: Refreshing alerts data only...');
+      // Only refresh IoT devices which includes alerts, not all data
+      getDevices();
+    }, 60000); // 60 seconds (reduced from 30 seconds)
 
     return () => clearInterval(alertRefreshInterval);
-  }, [getDevices, getAlerts]);
+  }, [getDevices]);
 
-  // Also set up a more frequent refresh for critical alerts every 10 seconds
+  // Check for critical alerts every 30 seconds but only refresh if needed (reduced frequency)
   useEffect(() => {
     const criticalAlertRefreshInterval = setInterval(() => {
       const activeAlerts = Object.entries(iotDevices).flatMap(([deviceId, device]) => {
@@ -119,14 +120,14 @@ export const HospitalDataProvider: React.FC<{ children: ReactNode }> = ({ childr
       });
 
       if (activeAlerts.length > 0) {
-        console.log('⚠️ HospitalDataContext: Critical alerts detected, refreshing data...');
+        console.log('⚠️ HospitalDataContext: Critical alerts detected, refreshing devices only...');
+        // Only refresh devices, not all data
         getDevices();
-        getAlerts();
       }
-    }, 10000); // 10 seconds for critical alerts
+    }, 30000); // 30 seconds (reduced from 10 seconds)
 
     return () => clearInterval(criticalAlertRefreshInterval);
-  }, [iotDevices, getDevices, getAlerts]);
+  }, [iotDevices, getDevices]);
 
   const refreshData = async () => {
     await Promise.all([
@@ -136,6 +137,12 @@ export const HospitalDataProvider: React.FC<{ children: ReactNode }> = ({ childr
       getAlerts(),
       getRooms(),
     ]);
+  };
+
+  // Add a separate function to refresh only alert-related data
+  const refreshAlertsOnly = async () => {
+    console.log('🔄 HospitalDataContext: Refreshing alerts only...');
+    await getDevices(); // IoT devices contain the alerts
   };
 
   const addPatient = async (patient: Patient) => {
@@ -216,6 +223,7 @@ export const HospitalDataProvider: React.FC<{ children: ReactNode }> = ({ childr
     getCriticalPatients,
     getActiveAlerts,
     refreshData,
+    refreshAlertsOnly,
   };
 
   return (

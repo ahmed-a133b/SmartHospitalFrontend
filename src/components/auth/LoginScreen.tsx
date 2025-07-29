@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Building2, User, Lock, AlertCircle } from 'lucide-react';
+import { Building2, User, Lock, AlertCircle, LucideBuilding2} from 'lucide-react';
 
 interface LoginScreenProps {
   onSwitchToSignup?: () => void;
@@ -40,17 +40,23 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onSwitchToSignup }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center">
-            <Building2 className="h-8 w-8 text-white" />
+    <div className="min-h-screen relative overflow-hidden flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      {/* Simple Background */}
+      <div className="absolute inset-0 bg-gray-50">
+      </div>
+      
+      <div className="max-w-md w-full space-y-8 relative z-10">
+        {/* Glassmorphism Card - No Glow Effect */}
+        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
+          <div className="text-center">
+            <div className="mx-auto h-16 w-16 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg animate-pulse-slow glow-green">
+              <Building2 className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="mt-6 text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">Smart Hospital</h2>
+            <p className="mt-2 text-sm text-gray-600">Digital Twin Dashboard</p>
           </div>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">Smart Hospital</h2>
-          <p className="mt-2 text-sm text-gray-600">Digital Twin Dashboard</p>
-        </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="email" className="sr-only">Email address</label>
@@ -101,45 +107,15 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onSwitchToSignup }) => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 glow-blue hover:glow-purple"
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
         </form>
 
-        <div className="mt-8">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-gradient-to-br from-blue-50 to-indigo-100 text-gray-500">Demo Accounts</span>
-            </div>
-          </div>
-          <div className="mt-6 grid gap-3">
-            {demoAccounts.map((account) => (
-              <button
-                key={account.email}
-                onClick={() => {
-                  setEmail(account.email);
-                  setPassword('password');
-                }}
-                className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-              >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{account.role}</p>
-                    <p className="text-xs text-gray-500">{account.description}</p>
-                  </div>
-                  <div className="text-xs text-gray-400">{account.email}</div>
-                </div>
-              </button>
-            ))}
-          </div>
-          <p className="mt-2 text-xs text-gray-500 text-center">
-            Use password: <span className="font-mono bg-gray-100 px-1 rounded">password</span>
-          </p>
+        <div className="mt-5">
+             
         </div>
 
         {onSwitchToSignup && (
@@ -153,6 +129,7 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ onSwitchToSignup }) => {
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );

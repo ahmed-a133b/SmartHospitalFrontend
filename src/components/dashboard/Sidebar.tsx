@@ -6,14 +6,16 @@ import {
   Calendar, 
   Settings, 
   Monitor, 
-  Heart, 
+  Building2,
+  Heart,
   AlertTriangle, 
   Home,
   UserPlus,
   Bed,
   Stethoscope,
   ClipboardList,
-  MapPin
+  MapPin,
+  MessageCircle
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -40,6 +42,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, userRole }
           { id: 'devices', label: 'IoT Devices', icon: Monitor },
           { id: 'alerts', label: 'System Alerts', icon: AlertTriangle },
           { id: 'analytics', label: 'Analytics', icon: Activity },
+          { id: 'assistant', label: 'Smart Assistant', icon: MessageCircle },
           { id: 'settings', label: 'Settings', icon: Settings }
         ];
       case 'doctor':
@@ -48,7 +51,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, userRole }
           { id: 'patients', label: 'My Patients', icon: Stethoscope },
           { id: 'alerts', label: 'Health Alerts', icon: Heart },
           { id: 'monitoring', label: 'Real-time Monitoring', icon: Activity },
-          { id: 'analytics', label: 'Patient Analytics', icon: ClipboardList }
+          { id: 'analytics', label: 'Patient Analytics', icon: ClipboardList },
+          { id: 'assistant', label: 'Smart Assistant', icon: MessageCircle }
         ];
       case 'staff':
         return [
@@ -56,7 +60,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, userRole }
           { id: 'schedule', label: 'My Schedule', icon: Calendar },
           { id: 'rooms', label: 'Room Status', icon: MapPin },
           { id: 'patients', label: 'Assigned Patients', icon: Users },
-          { id: 'tasks', label: 'Tasks', icon: ClipboardList }
+          { id: 'tasks', label: 'Tasks', icon: ClipboardList },
+          { id: 'assistant', label: 'Smart Assistant', icon: MessageCircle }
         ];
       default:
         return baseItems;
@@ -71,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, userRole }
       <div className="p-6 border-b border-gray-200">
         <div className="flex items-center space-x-3">
           <div className="h-10 w-10 bg-blue-600 rounded-lg flex items-center justify-center">
-            <Heart className="h-6 w-6 text-white" />
+            <Building2 className="h-6 w-6 text-white" />
           </div>
           <div>
             <h2 className="text-lg font-semibold text-gray-900">Smart Hospital</h2>
