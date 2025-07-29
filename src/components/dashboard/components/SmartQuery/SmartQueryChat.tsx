@@ -134,11 +134,7 @@ const SmartQueryChat: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[600px] w-full max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
-      <div className="bg-blue-600 text-white p-4 text-center">
-        <h2 className="text-lg font-semibold">Smart Hospital Query Assistant</h2>
-      </div>
-      
+    <div className="flex flex-col h-full w-full bg-white overflow-hidden">
       <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
         <div className="space-y-4">
           {messages.map((message, index) => (

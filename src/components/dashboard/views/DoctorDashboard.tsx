@@ -6,7 +6,6 @@ import PatientMonitoring from '../components/doctor/PatientMonitoring';
 import HealthAlerts from '../components/doctor/HealthAlerts';
 import RealTimeMonitoring from '../components/doctor/RealTimeMonitoring';
 import PatientAnalytics from '../components/doctor/PatientAnalytics';
-import SmartQueryChat from '../components/SmartQuery/SmartQueryChat';
 
 interface DoctorDashboardProps {
   activeView: string;
@@ -123,18 +122,6 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ activeView }) => {
         return <RealTimeMonitoring />;
       case 'analytics':
         return <PatientAnalytics />;
-      case 'assistant':
-        return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-gray-900">Smart Medical Assistant</h1>
-              <div className="text-sm text-gray-500">
-                Ask me about patient conditions, alerts, or room status
-              </div>
-            </div>
-            <SmartQueryChat />
-          </div>
-        );
       default:
         return <div>View not found</div>;
     }

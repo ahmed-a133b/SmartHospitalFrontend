@@ -74,237 +74,183 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ onSwitchToLogin }) => {
 
   return (
     <div className="min-h-screen relative overflow-hidden flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      {/* Dynamic Animated Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-        {/* Floating Circles Animation with Enhanced Glow */}
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob glow-blue"></div>
-        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-purple-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-2000 glow-purple"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-64 h-64 bg-indigo-200 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob animation-delay-4000 glow-blue"></div>
-        
-        {/* Additional Glowing Orbs */}
-        <div className="absolute top-20 right-20 w-32 h-32 bg-green-300 rounded-full mix-blend-multiply filter blur-lg opacity-60 animate-blob glow-green" style={{ animationDelay: '1s' }}></div>
-        <div className="absolute bottom-32 right-32 w-48 h-48 bg-pink-200 rounded-full mix-blend-multiply filter blur-xl opacity-50 animate-blob glow-purple" style={{ animationDelay: '3s' }}></div>
-        
-        {/* Animated Grid Pattern */}
-        <div className="absolute inset-0 opacity-20 animate-shimmer">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `radial-gradient(circle at 1px 1px, rgba(59, 130, 246, 0.5) 1px, transparent 0)`,
-            backgroundSize: '20px 20px'
-          }}></div>
-        </div>
-        
-        {/* Enhanced Floating Medical Icons with Glow */}
-        <div className="absolute top-20 left-20 animate-float glow-green">
-          <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center opacity-80 shadow-lg">
-            <span className="text-white text-xs font-bold">+</span>
-          </div>
-        </div>
-        <div className="absolute top-40 right-32 animate-float glow-blue" style={{ animationDelay: '1s' }}>
-          <div className="w-6 h-6 bg-gradient-to-r from-blue-400 to-cyan-500 rounded-full flex items-center justify-center opacity-80 shadow-lg">
-            <span className="text-white text-xs">⚡</span>
-          </div>
-        </div>
-        <div className="absolute bottom-32 left-40 animate-float glow-purple" style={{ animationDelay: '2s' }}>
-          <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center opacity-80 shadow-lg">
-            <span className="text-white text-xs">💊</span>
-          </div>
-        </div>
-        <div className="absolute bottom-20 right-20 animate-float glow-blue" style={{ animationDelay: '3s' }}>
-          <div className="w-7 h-7 bg-gradient-to-r from-indigo-400 to-blue-500 rounded-full flex items-center justify-center opacity-80 shadow-lg">
-            <span className="text-white text-xs">🏥</span>
-          </div>
-        </div>
+      {/* Simple Background */}
+      <div className="absolute inset-0 bg-gray-50">
       </div>
-
+      
       <div className="max-w-md w-full space-y-8 relative z-10">
-        {/* Glassmorphism Card */}
+        {/* Glassmorphism Card - No Glow Effect */}
         <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-8">
           <div className="text-center">
-            <div className="mx-auto h-16 w-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg animate-pulse-slow">
+            <div className="mx-auto h-16 w-16 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center shadow-lg animate-pulse-slow glow-green">
               <Building2 className="h-8 w-8 text-white" />
             </div>
             <h2 className="mt-6 text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">Join Smart Hospital</h2>
             <p className="mt-2 text-sm text-gray-600">Create your staff account</p>
           </div>
 
-        <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1">
-                First Name
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="first_name" className="sr-only">First Name</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <User className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="first_name"
+                    name="first_name"
+                    type="text"
+                    required
+                    value={formData.first_name}
+                    onChange={handleInputChange}
+                    className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="First Name"
+                  />
                 </div>
+              </div>
+              <div>
+                <label htmlFor="last_name" className="sr-only">Last Name</label>
                 <input
-                  id="first_name"
-                  name="first_name"
+                  id="last_name"
+                  name="last_name"
                   type="text"
                   required
-                  value={formData.first_name}
+                  value={formData.last_name}
                   onChange={handleInputChange}
-                  className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="John"
+                  className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Last Name"
                 />
               </div>
             </div>
-            <div>
-              <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-1">
-                Last Name
-              </label>
-              <input
-                id="last_name"
-                name="last_name"
-                type="text"
-                required
-                value={formData.last_name}
-                onChange={handleInputChange}
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="Doe"
-              />
-            </div>
-          </div>
 
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-              Email Address
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                id="email"
-                name="email"
-                type="email"
-                required
-                value={formData.email}
-                onChange={handleInputChange}
-                className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="john.doe@hospital.com"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Password
-              </label>
+              <label htmlFor="email" className="sr-only">Email Address</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Mail className="h-5 w-5 text-gray-400" />
                 </div>
                 <input
-                  id="password"
-                  name="password"
-                  type="password"
+                  id="email"
+                  name="email"
+                  type="email"
                   required
-                  value={formData.password}
+                  value={formData.email}
                   onChange={handleInputChange}
                   className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="••••••••"
+                  placeholder="Email address"
                 />
               </div>
             </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="password" className="sr-only">Password</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    required
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Password"
+                  />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="confirmPassword" className="sr-only">Confirm Password</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Lock className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Confirm Password"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm Password
-              </label>
+              <label htmlFor="role" className="sr-only">Role</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
+                  <Briefcase className="h-5 w-5 text-gray-400" />
                 </div>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
+                <select
+                  id="role"
+                  name="role"
                   required
-                  value={formData.confirmPassword}
+                  value={formData.role}
                   onChange={handleInputChange}
                   className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="••••••••"
-                />
+                >
+                  <option value="staff">Staff</option>
+                  <option value="doctor">Doctor</option>
+                 
+                </select>
               </div>
             </div>
-          </div>
 
-          <div>
-            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-              Role
-            </label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Briefcase className="h-5 w-5 text-gray-400" />
-              </div>
-              <select
-                id="role"
-                name="role"
-                required
-                value={formData.role}
-                onChange={handleInputChange}
-                className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              >
-                <option value="staff">Staff</option>
-                <option value="doctor">Doctor</option>
-                <option value="admin">Admin</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="department" className="block text-sm font-medium text-gray-700 mb-1">
-                Department
-              </label>
-              <input
-                id="department"
-                name="department"
-                type="text"
-                value={formData.department}
-                onChange={handleInputChange}
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="ICU, Cardiology..."
-              />
-            </div>
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                Phone
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Phone className="h-5 w-5 text-gray-400" />
-                </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="department" className="sr-only">Department</label>
                 <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  value={formData.phone}
+                  id="department"
+                  name="department"
+                  type="text"
+                  value={formData.department}
                   onChange={handleInputChange}
-                  className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="+1 (555) 123-4567"
+                  className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Department"
                 />
               </div>
+              <div>
+                <label htmlFor="phone" className="sr-only">Phone</label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Phone className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={formData.phone}
+                    onChange={handleInputChange}
+                    className="appearance-none relative block w-full pl-10 pr-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    placeholder="Phone"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
 
-          {formData.role === 'doctor' && (
-            <div>
-              <label htmlFor="specialization" className="block text-sm font-medium text-gray-700 mb-1">
-                Specialization
-              </label>
-              <input
-                id="specialization"
-                name="specialization"
-                type="text"
-                value={formData.specialization}
-                onChange={handleInputChange}
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="Cardiology, Surgery..."
-              />
-            </div>
-          )}
+            {formData.role === 'doctor' && (
+              <div>
+                <label htmlFor="specialization" className="sr-only">Specialization</label>
+                <input
+                  id="specialization"
+                  name="specialization"
+                  type="text"
+                  value={formData.specialization}
+                  onChange={handleInputChange}
+                  className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  placeholder="Specialization"
+                />
+              </div>
+            )}
+          </div>
 
           {displayError && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center space-x-2">
@@ -317,7 +263,7 @@ const SignupScreen: React.FC<SignupScreenProps> = ({ onSwitchToLogin }) => {
             <button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 glow-blue hover:glow-purple"
             >
               {loading ? 'Creating Account...' : 'Create Account'}
             </button>

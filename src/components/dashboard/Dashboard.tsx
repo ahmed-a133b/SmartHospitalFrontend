@@ -5,6 +5,7 @@ import AdminDashboard from './views/AdminDashboard';
 import DoctorDashboard from './views/DoctorDashboard';
 import StaffDashboard from './views/StaffDashboard';
 import Header from './Header';
+import FloatingSmartAssistant from './components/FloatingSmartAssistant';
 
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
@@ -37,6 +38,9 @@ const Dashboard: React.FC = () => {
           {renderDashboard()}
         </main>
       </div>
+      
+      {/* Floating Smart Assistant */}
+      <FloatingSmartAssistant />
     </div>
   );
 };

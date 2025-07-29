@@ -36,14 +36,28 @@ const Sidebar: React.FC<SidebarProps> = ({ activeView, setActiveView, userRole }
       case 'admin':
         return [
           ...baseItems,
-          { id: 'patients', label: 'Patient Management', icon: Users },
           { id: 'staff', label: 'Staff Management', icon: UserPlus },
           { id: 'rooms', label: 'Room Management', icon: Bed },
           { id: 'devices', label: 'IoT Devices', icon: Monitor },
           { id: 'alerts', label: 'System Alerts', icon: AlertTriangle },
           { id: 'analytics', label: 'Analytics', icon: Activity },
-          { id: 'assistant', label: 'Smart Assistant', icon: MessageCircle },
           { id: 'settings', label: 'Settings', icon: Settings }
+        ];
+      case 'doctor':
+        return [
+          ...baseItems,
+          { id: 'patients', label: 'My Patients', icon: Stethoscope },
+          { id: 'alerts', label: 'Health Alerts', icon: Heart },
+          { id: 'monitoring', label: 'Real-time Monitoring', icon: Activity },
+          { id: 'analytics', label: 'Patient Analytics', icon: ClipboardList }
+        ];
+      case 'staff':
+        return [
+          ...baseItems,
+          { id: 'schedule', label: 'My Schedule', icon: Calendar },
+          { id: 'rooms', label: 'Room Status', icon: MapPin },
+          { id: 'patients', label: 'Assigned Patients', icon: Users },
+          { id: 'tasks', label: 'Tasks', icon: ClipboardList }
         ];
       case 'doctor':
         return [
