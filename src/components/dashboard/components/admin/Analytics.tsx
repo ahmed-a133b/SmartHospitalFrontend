@@ -93,7 +93,10 @@ const Analytics: React.FC = () => {
   }> = ({ data, vital }) => {
     const chartWidth = 600;
     const chartHeight = 200;
-    const padding = 40;
+    const leftPadding = 100; // Increased further to accommodate heart rate labels like "120BPM"
+    const rightPadding = 40;
+    const topPadding = 40;
+    const bottomPadding = 40;
     
     const values = data.map(d => d[vital as keyof typeof d] as number);
     const minValue = Math.min(...values);
@@ -101,8 +104,8 @@ const Analytics: React.FC = () => {
     const range = maxValue - minValue || 1;
     
     const points = data.map((point, index) => {
-      const x = padding + (index * (chartWidth - 2 * padding)) / (data.length - 1);
-      const y = chartHeight - padding - ((point[vital as keyof typeof point] as number - minValue) / range) * (chartHeight - 2 * padding);
+      const x = leftPadding + (index * (chartWidth - leftPadding - rightPadding)) / (data.length - 1);
+      const y = chartHeight - bottomPadding - ((point[vital as keyof typeof point] as number - minValue) / range) * (chartHeight - topPadding - bottomPadding);
       return `${x},${y}`;
     }).join(' ');
     
@@ -117,7 +120,7 @@ const Analytics: React.FC = () => {
     
     const getVitalUnit = (vitalType: string) => {
       switch (vitalType) {
-        case 'heartRate': return 'BPM';
+        case 'heartRate': return ' BPM';
         case 'temperature': return '°F';
         case 'oxygenLevel': return '%';
         default: return '';
@@ -131,10 +134,10 @@ const Analytics: React.FC = () => {
           {[0, 1, 2, 3, 4].map(i => (
             <line
               key={i}
-              x1={padding}
-              y1={padding + i * (chartHeight - 2 * padding) / 4}
-              x2={chartWidth - padding}
-              y2={padding + i * (chartHeight - 2 * padding) / 4}
+              x1={leftPadding}
+              y1={topPadding + i * (chartHeight - topPadding - bottomPadding) / 4}
+              x2={chartWidth - rightPadding}
+              y2={topPadding + i * (chartHeight - topPadding - bottomPadding) / 4}
               stroke="#f3f4f6"
               strokeWidth="1"
             />
@@ -152,8 +155,8 @@ const Analytics: React.FC = () => {
           
           {/* Data points */}
           {data.map((point, index) => {
-            const x = padding + (index * (chartWidth - 2 * padding)) / (data.length - 1);
-            const y = chartHeight - padding - ((point[vital as keyof typeof point] as number - minValue) / range) * (chartHeight - 2 * padding);
+            const x = leftPadding + (index * (chartWidth - leftPadding - rightPadding)) / (data.length - 1);
+            const y = chartHeight - bottomPadding - ((point[vital as keyof typeof point] as number - minValue) / range) * (chartHeight - topPadding - bottomPadding);
             return (
               <circle
                 key={index}
@@ -168,22 +171,48 @@ const Analytics: React.FC = () => {
             );
           })}
           
-          {/* Y-axis labels */}
-          {[minValue, maxValue].map((value, index) => (
-            <text
-              key={index}
-              x={padding - 10}
-              y={index === 0 ? chartHeight - padding + 5 : padding + 5}
-              textAnchor="end"
-              className="text-xs fill-gray-600"
-            >
-              {Math.round(value * 10) / 10}{getVitalUnit(vital)}
-            </text>
-          ))}
+          {/* Y-axis labels - Add more intermediate values for better readability */}
+          {[0, 1, 2, 3, 4].map((i) => {
+            const value = minValue + (i * range) / 4;
+            const y = chartHeight - bottomPadding - (i * (chartHeight - topPadding - bottomPadding)) / 4;
+            return (
+              <text
+                key={i}
+                x={leftPadding - 20} // Increased spacing further from axis
+                y={y + 4} // Center vertically
+                textAnchor="end"
+                className="text-xs fill-gray-600"
+                fontSize="10"
+                fontFamily="Arial, sans-serif"
+              >
+                {Math.round(value * 10) / 10}{getVitalUnit(vital)}
+              </text>
+            );
+          })}
+          
+          {/* Y-axis line */}
+          <line
+            x1={leftPadding}
+            y1={topPadding}
+            x2={leftPadding}
+            y2={chartHeight - bottomPadding}
+            stroke="#d1d5db"
+            strokeWidth="1"
+          />
+          
+          {/* X-axis line */}
+          <line
+            x1={leftPadding}
+            y1={chartHeight - bottomPadding}
+            x2={chartWidth - rightPadding}
+            y2={chartHeight - bottomPadding}
+            stroke="#d1d5db"
+            strokeWidth="1"
+          />
         </svg>
         
         {/* X-axis labels */}
-        <div className="flex justify-between mt-2 px-10 text-xs text-gray-600">
+        <div className="flex justify-between mt-2 text-xs text-gray-600" style={{ paddingLeft: `${leftPadding}px`, paddingRight: `${rightPadding}px` }}>
           <span>{data[0]?.timestamp}</span>
           <span>{data[Math.floor(data.length / 2)]?.timestamp}</span>
           <span>{data[data.length - 1]?.timestamp}</span>

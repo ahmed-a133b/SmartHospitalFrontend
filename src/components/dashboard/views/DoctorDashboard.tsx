@@ -12,6 +12,11 @@ interface DoctorDashboardProps {
   activeView: string;
 }
 
+const formatId = (deviceId: string): string => {
+  return deviceId
+    .replace(/_/g, ' ') // Replace underscores with spaces
+    .replace(/\b\w/g, (char) => char.toUpperCase()); // Capitalize first letter of each word
+};
 const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ activeView }) => {
   const { getCriticalPatients } = useHospitalData();
   
@@ -51,7 +56,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ activeView }) => {
                         <div>
                           <h4 className="font-medium text-gray-900">{patient.personalInfo.name}</h4>
                           <p className="text-sm text-gray-600">
-                            Room {patient.personalInfo.roomId} - {patient.currentStatus.diagnosis}
+                            Room {patient.personalInfo.roomId.split('_')[1]} - {patient.currentStatus.diagnosis}
                           </p>
                           <p className="text-sm text-red-600 font-medium">
                             Risk Level: {patient.predictions.riskLevel} 
@@ -89,7 +94,7 @@ const DoctorDashboard: React.FC<DoctorDashboardProps> = ({ activeView }) => {
                           {alert.timestamp}
                         </p>
                         <p className="text-xs text-amber-600">
-                          Device: {alert.deviceId} | Room: {alert.roomId}
+                          {formatId(alert.deviceId)} | {formatId(alert.roomId)}
                         </p>
                       </div>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${

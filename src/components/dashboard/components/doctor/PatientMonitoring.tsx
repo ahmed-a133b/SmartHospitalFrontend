@@ -345,50 +345,65 @@ const PatientMonitoring: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Patient Monitoring</h1>
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={refreshVitals}
-            disabled={vitalsLoading}
-            className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            <RefreshCw className={`h-4 w-4 mr-2 ${vitalsLoading ? 'animate-spin' : ''}`} />
-            {vitalsLoading ? 'Refreshing...' : 'Refresh Vitals'}
-          </button>
-          <div className="text-right">
-            <div className="text-sm text-gray-500">
-              Live monitoring • Last updated: {new Date().toLocaleString('en-PK', {
-                timeZone: 'Asia/Karachi',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: true
-              })} PST
-            </div>
-            {vitalsError && (
-              <div className="text-xs text-red-500 mt-1">
-                Error: {vitalsError}
+      {/* Header */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center space-y-4 sm:space-y-0">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Patient Monitoring</h1>
+            <p className="text-sm text-gray-600 mt-1">Real-time patient vital signs and AI health analysis</p>
+          </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-2 sm:space-y-0 sm:space-x-4">
+            <button
+              onClick={refreshVitals}
+              disabled={vitalsLoading}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-colors duration-200"
+            >
+              <RefreshCw className={`h-4 w-4 mr-2 ${vitalsLoading ? 'animate-spin' : ''}`} />
+              {vitalsLoading ? 'Refreshing...' : 'Refresh Vitals'}
+            </button>
+            <div className="text-right">
+              <div className="text-sm text-gray-500">
+                Live monitoring • Last updated: {new Date().toLocaleString('en-PK', {
+                  timeZone: 'Asia/Karachi',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: true
+                })} PST
               </div>
-            )}
+              {vitalsError && (
+                <div className="text-xs text-red-500 mt-1">
+                  Error: {vitalsError}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-        <input
-          type="text"
-          placeholder="Search patients by name or diagnosis..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+          <input
+            type="text"
+            placeholder="Search patients by name or diagnosis..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors duration-200"
+          />
+          {searchTerm && (
+            <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+              <span className="text-xs text-gray-500">
+                {filteredPatients.length} of {patientsEntries.length} patients
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Patients Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {filteredPatients.map(([patientId, patient]) => {
           const vitals = getPatientVitals(patientId);
           
@@ -449,46 +464,70 @@ const PatientMonitoring: React.FC = () => {
           });
           
           return (
-            <div key={patientId} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              <div className="p-6 border-b border-gray-200">
+            <div key={patientId} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow duration-200">
+              {/* Header Section */}
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-6 py-4 border-b border-gray-200">
                 <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{patient.personalInfo.name}</h3>
-                    <p className="text-sm text-gray-600">{patient.currentStatus.diagnosis}</p>
-                    <p className="text-sm text-gray-500">
-                      {patient.personalInfo.roomId ? 
-                        `Room ${patient.personalInfo.roomId.split('_')[1] || patient.personalInfo.roomId}` : 
-                        'No room assigned'
-                      }
-                      {patient.personalInfo.bedId && (
-                        ` • Bed ${patient.personalInfo.bedId.split('_')[1] || patient.personalInfo.bedId}`
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3">
+                      <h3 className="text-xl font-bold text-gray-900">{patient.personalInfo.name}</h3>
+                      {isRealTimeVitals && (
+                        <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+                          <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
+                          Live
+                        </span>
                       )}
-                      {patient.personalInfo.ward && ` • ${patient.personalInfo.ward}`}
-                    </p>
+                    </div>
+                    <p className="text-sm text-gray-700 font-medium mt-1">{patient.currentStatus.diagnosis}</p>
+                    
+                    {/* Location Info */}
+                    <div className="flex items-center space-x-4 mt-2 text-xs text-gray-600">
+                      {patient.personalInfo.roomId ? (
+                        <span className="inline-flex items-center">
+                          <span className="w-2 h-2 bg-blue-400 rounded-full mr-1"></span>
+                          Room {patient.personalInfo.roomId.split('_')[1] || patient.personalInfo.roomId}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center text-gray-400">
+                          <span className="w-2 h-2 bg-gray-300 rounded-full mr-1"></span>
+                          No room assigned
+                        </span>
+                      )}
+                      
+                      {patient.personalInfo.bedId && (
+                        <span className="inline-flex items-center">
+                          <span className="w-2 h-2 bg-green-400 rounded-full mr-1"></span>
+                          Bed {patient.personalInfo.bedId.split('_')[1] || patient.personalInfo.bedId}
+                        </span>
+                      )}
+                      
+                      {patient.personalInfo.ward && (
+                        <span className="inline-flex items-center">
+                          <span className="w-2 h-2 bg-purple-400 rounded-full mr-1"></span>
+                          {patient.personalInfo.ward}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-3">
+                  
+                  {/* Risk Level and Actions */}
+                  <div className="flex flex-col items-end space-y-2">
                     <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getRiskLevelColor(riskLevel)}`}>
                       {riskLevel} Risk
                     </span>
-                    {isRealTimeVitals && (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                        <div className="w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></div>
-                        Live
-                      </span>
-                    )}
                     <button
                       onClick={() => getHealthPrediction(patientId)}
                       disabled={isLoadingPrediction}
-                      className="inline-flex items-center px-3 py-2 border border-blue-300 shadow-sm text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="inline-flex items-center px-3 py-1.5 border border-blue-300 shadow-sm text-xs leading-4 font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
                     >
                       {isLoadingPrediction ? (
                         <>
-                          <Loader className="animate-spin h-4 w-4 mr-2" />
+                          <Loader className="animate-spin h-3 w-3 mr-1" />
                           Analyzing...
                         </>
                       ) : (
                         <>
-                          <Brain className="h-4 w-4 mr-2" />
+                          <Brain className="h-3 w-3 mr-1" />
                           Get Prediction
                         </>
                       )}
@@ -497,119 +536,89 @@ const PatientMonitoring: React.FC = () => {
                 </div>
               </div>
 
+              {/* Vitals and Analytics Section */}
               <div className="p-6">
                 {vitals && isVitalReading(vitals) ? (
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="flex items-center space-x-3">
-                        <div className="h-8 w-8 bg-red-100 rounded-full flex items-center justify-center">
-                          <Heart className="h-4 w-4 text-red-600" />
+                  <div className="space-y-6">
+                    {/* Vital Signs Grid */}
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                        <Activity className="h-4 w-4 mr-2 text-blue-500" />
+                        Vital Signs
+                        {isRealTimeVitals && (
+                          <span className="ml-2 text-xs text-green-600 font-medium">• Live monitoring</span>
+                        )}
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-lg p-3 border border-red-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Heart className="h-4 w-4 text-red-600" />
+                              <span className="text-sm font-medium text-red-800">Heart Rate</span>
+                            </div>
+                            <span className={`text-lg font-bold ${getVitalStatus(vitals.heartRate, 'heartRate')}`}>
+                              {vitals.heartRate.toFixed(0)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-red-700 mt-1">bpm</p>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-600">Heart Rate</p>
-                          <p className={`text-lg font-semibold ${getVitalStatus(vitals.heartRate, 'heartRate')}`}>
-                            {vitals.heartRate.toFixed(1)} bpm
-                          </p>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center space-x-3">
-                        <div className="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Droplets className="h-4 w-4 text-blue-600" />
+                        <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg p-3 border border-blue-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Droplets className="h-4 w-4 text-blue-600" />
+                              <span className="text-sm font-medium text-blue-800">Oxygen</span>
+                            </div>
+                            <span className={`text-lg font-bold ${getVitalStatus(vitals.oxygenLevel, 'oxygenLevel')}`}>
+                              {vitals.oxygenLevel.toFixed(0)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-blue-700 mt-1">%</p>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-600">Oxygen Level</p>
-                          <p className={`text-lg font-semibold ${getVitalStatus(vitals.oxygenLevel, 'oxygenLevel')}`}>
-                            {vitals.oxygenLevel.toFixed(1)}%
-                          </p>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center space-x-3">
-                        <div className="h-8 w-8 bg-orange-100 rounded-full flex items-center justify-center">
-                          <Thermometer className="h-4 w-4 text-orange-600" />
+                        <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg p-3 border border-orange-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Thermometer className="h-4 w-4 text-orange-600" />
+                              <span className="text-sm font-medium text-orange-800">Temperature</span>
+                            </div>
+                            <span className={`text-lg font-bold ${getVitalStatus(vitals.temperature, 'temperature')}`}>
+                              {vitals.temperature.toFixed(1)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-orange-700 mt-1">°F</p>
                         </div>
-                        <div>
-                          <p className="text-xs text-gray-600">Temperature</p>
-                          <p className={`text-lg font-semibold ${getVitalStatus(vitals.temperature, 'temperature')}`}>
-                            {vitals.temperature.toFixed(1)}°F
-                          </p>
-                        </div>
-                      </div>
 
-                      <div className="flex items-center space-x-3">
-                        <div className="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center">
-                          <Activity className="h-4 w-4 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-600">Blood Pressure</p>
-                          <p className="text-lg font-semibold text-gray-900">
-                            {Math.round(vitals.bloodPressure.systolic)}/{Math.round(vitals.bloodPressure.diastolic)}
-                          </p>
+                        <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-lg p-3 border border-green-200">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Activity className="h-4 w-4 text-green-600" />
+                              <span className="text-sm font-medium text-green-800">Blood Pressure</span>
+                            </div>
+                            <span className="text-lg font-bold text-green-800">
+                              {Math.round(vitals.bloodPressure.systolic)}/{Math.round(vitals.bloodPressure.diastolic)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-green-700 mt-1">mmHg</p>
                         </div>
                       </div>
                     </div>
 
-                    <div className="pt-4 border-t border-gray-100">
+                    {/* AI Analysis Section */}
+                    <div className="border-t border-gray-100 pt-4">
                       {riskLevel === 'Unknown' ? (
-                        <div className="text-center py-4">
-                          <p className="text-sm text-gray-500">
-                            No prediction available. Click "Get Prediction" to analyze patient risk.
-                          </p>
+                        <div className="bg-gray-50 rounded-lg p-4 text-center">
+                          <Brain className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                          <p className="text-sm text-gray-600 mb-2">No AI analysis available</p>
+                          <p className="text-xs text-gray-500">Click "Get Prediction" to analyze patient risk using AI</p>
                         </div>
                       ) : (
-                        <>
-                          <div className="flex justify-between items-center text-sm">
-                            <span className="text-gray-600">Risk Score:</span>
-                            <span className="font-semibold text-gray-900">{riskScore.toFixed ? riskScore.toFixed(1) : riskScore}%</span>
-                          </div>
-                          <div className="flex justify-between items-center text-sm mt-1">
-                            <span className="text-gray-600">Confidence:</span>
-                            <span className="font-semibold text-gray-900">
-                              {Math.round(confidence * 100)}%
-                            </span>
-                          </div>
-                          {recommendations && recommendations.length > 0 && (
-                            <div className="mt-2">
-                              <p className="text-xs text-gray-600 mb-1">AI Recommendations:</p>
-                              <ul className="text-xs text-gray-900 space-y-1">
-                                {recommendations.map((rec: string, index: number) => (
-                                  <li key={index} className="flex items-start space-x-1">
-                                    <span className="text-blue-500 mt-0.5">•</span>
-                                    <span>{rec}</span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </>
-                      )}
-                      <div className="mt-2">
-                        <p className="text-xs text-gray-600">
-                          {isRealTimeVitals ? 'Live vitals update:' : 'Last vitals update:'}
-                        </p>
-                        <p className="text-xs text-gray-900">
-                          {vitals?.timestamp ? formatTimestamp(vitals.timestamp) : 'No timestamp available'}
-                        </p>
-                        {/* Debug: Show raw timestamp */}
-                        {vitals?.timestamp && (
-                          <p className="text-xs text-gray-400 italic">
-                            Raw: {vitals.timestamp}
-                          </p>
-                        )}
-                        {isRealTimeVitals && (
-                          <p className="text-xs text-green-600 font-medium">
-                            ✓ Real-time data from monitor
-                          </p>
-                        )}
-                      </div>
-                      {predictedAt && (
-                        <div className="mt-1">
-                          <p className="text-xs text-gray-600">Prediction made:</p>
-                          <p className="text-xs text-green-700 font-medium">
-                            {formatTimestamp(predictedAt)}
-                            {isFreshPrediction && currentPrediction.lastUpdated && (
-                              <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
+                            <Brain className="h-4 w-4 mr-2 text-purple-500" />
+                            AI Risk Analysis
+                            {isFreshPrediction && (
+                              <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                 Fresh
                               </span>
                             )}
@@ -618,15 +627,81 @@ const PatientMonitoring: React.FC = () => {
                                 Cached
                               </span>
                             )}
-                          </p>
+                          </h4>
+                          
+                          <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-3 border border-purple-200">
+                            <div className="grid grid-cols-2 gap-3 mb-3">
+                              <div className="text-center">
+                                <p className="text-xs text-purple-700 font-medium">Risk Score</p>
+                                <p className="text-xl font-bold text-purple-900">
+                                  {riskScore.toFixed ? riskScore.toFixed(1) : riskScore}%
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-xs text-purple-700 font-medium">Confidence</p>
+                                <p className="text-xl font-bold text-purple-900">
+                                  {Math.round(confidence * 100)}%
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {recommendations && recommendations.length > 0 && (
+                              <div>
+                                <p className="text-xs font-medium text-purple-800 mb-2">Recommendations:</p>
+                                <div className="space-y-1">
+                                  {recommendations.slice(0, 2).map((rec: string, index: number) => (
+                                    <div key={index} className="flex items-start space-x-2 text-xs">
+                                      <span className="inline-block w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                                      <span className="text-purple-800 leading-relaxed">{rec}</span>
+                                    </div>
+                                  ))}
+                                  {recommendations.length > 2 && (
+                                    <p className="text-xs text-purple-600 italic pl-3">
+                                      +{recommendations.length - 2} more
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
+
+                    {/* Timestamps Section */}
+                    <div className="bg-gray-50 rounded-lg p-3 text-xs">
+                      <div className="grid grid-cols-1 gap-1">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-600 flex items-center">
+                            <Activity className="h-3 w-3 mr-1" />
+                            {isRealTimeVitals ? 'Live vitals:' : 'Last update:'}
+                          </span>
+                          <span className="text-gray-800 font-medium">
+                            {vitals?.timestamp ? formatTimestamp(vitals.timestamp) : 'No data'}
+                          </span>
+                        </div>
+                        
+                        {predictedAt && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600 flex items-center">
+                              <Brain className="h-3 w-3 mr-1" />
+                              AI analysis:
+                            </span>
+                            <span className="text-gray-800 font-medium">
+                              {formatTimestamp(predictedAt)}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <Activity className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                    <p className="text-gray-500">No monitoring device connected</p>
+                  <div className="text-center py-12">
+                    <div className="bg-gray-50 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                      <Activity className="h-8 w-8 text-gray-300" />
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-600 mb-2">No Device Connected</h4>
+                    <p className="text-sm text-gray-500">This patient doesn't have a monitoring device assigned</p>
                   </div>
                 )}
               </div>
