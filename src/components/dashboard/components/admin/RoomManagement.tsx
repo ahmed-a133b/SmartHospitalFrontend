@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useHospitalData } from '../../../../contexts/HospitalDataContext';
 import { useBeds } from '../../../../api/hooks/useBeds';
-import { Plus, Search, Edit, MapPin, Thermometer, Droplets, Bed, Wind, BarChart2, Computer } from 'lucide-react';
+import { Plus, Search, Edit, MapPin, Thermometer, Droplets, Bed, Wind, BarChart2 } from 'lucide-react';
 import { IoTDevice } from '../../../../api/types';
 import { getLatestVitals, getLatestEnvironmentalData } from '../../../../utils/deviceUtils';
 import RoomForm from './RoomForm';

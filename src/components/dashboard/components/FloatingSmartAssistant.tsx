@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { MessageCircle, X, Minimize2, Maximize2, GripVertical } from 'lucide-react';
+import { MessageCircle, X, Minimize2, Maximize2 } from 'lucide-react';
 import SmartQueryChat from './SmartQuery/SmartQueryChat';
 
 const FloatingSmartAssistant: React.FC = () => {

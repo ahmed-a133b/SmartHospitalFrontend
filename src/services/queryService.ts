@@ -538,8 +538,7 @@ export const processChatQuery = async (query: string): Promise<QueryResponse> =>
             } else if (patients.length === 1) {
               const riskPrediction = await fetchHealthRiskPrediction(patients[0].id);
               return {
-                message: `**${patients[0].name} (${patients[0].id})**\n\n${formatHealthRiskPrediction(riskPrediction)}`,
-                data: riskPrediction
+                message: `**${patients[0].name} (${patients[0].id})**\n\n${formatHealthRiskPrediction(riskPrediction)}`
               };
             } else {
               return {
@@ -549,8 +548,7 @@ export const processChatQuery = async (query: string): Promise<QueryResponse> =>
           } else {
             const riskPrediction = await fetchHealthRiskPrediction(patientInfo.value);
             return {
-              message: `**Patient ${patientInfo.value}**\n\n${formatHealthRiskPrediction(riskPrediction)}`,
-              data: riskPrediction
+              message: `**Patient ${patientInfo.value}**\n\n${formatHealthRiskPrediction(riskPrediction)}`
             };
           }
         } catch (error) {

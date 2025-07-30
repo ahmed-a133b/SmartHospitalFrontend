@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useHospitalData } from '../../../../contexts/HospitalDataContext';
-import { Plus, Search, Edit, Wifi, WifiOff, Battery, AlertTriangle, Thermometer, Droplets, Wind, User, UserCheck, UserX, Info, InfoIcon, Volume2, CloudRain, Sun } from 'lucide-react';
+import { Plus, Search, Edit, Wifi, WifiOff, Battery, AlertTriangle, Thermometer, Droplets, Wind, User, UserCheck, UserX, InfoIcon, Volume2, CloudRain, Sun } from 'lucide-react';
 import { getLatestVitals, isVitalReading, isEnvironmentalReading } from '../../../../utils/deviceUtils';
 import { assignPatientToMonitor, unassignPatientFromMonitor, getAvailablePatientsForMonitor } from '../../../../api/patientMonitorAssignment';
 import { API_BASE_URL } from '../../../../api/config';
