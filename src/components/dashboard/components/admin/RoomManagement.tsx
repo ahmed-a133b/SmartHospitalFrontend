@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useHospitalData } from '../../../../contexts/HospitalDataContext';
 import { useBeds } from '../../../../api/hooks/useBeds';
-import { Plus, Search, Edit, MapPin, Thermometer, Droplets, Bed, Wind, InfoIcon } from 'lucide-react';
+import { Plus, Search, Edit, MapPin, Thermometer, Droplets, Bed, Wind, BarChart2, Computer } from 'lucide-react';
 import { IoTDevice } from '../../../../api/types';
 import { getLatestVitals, getLatestEnvironmentalData } from '../../../../utils/deviceUtils';
 import RoomForm from './RoomForm';
@@ -159,9 +159,7 @@ const RoomManagement: React.FC = () => {
               <p className="text-3xl font-bold text-green-600 mt-1">{totalRooms - occupiedRooms}</p>
             </div>
             <div className="p-3 bg-green-50 rounded-lg">
-              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                <div className="w-3 h-3 bg-white rounded-full"></div>
-              </div>
+              <Bed className="w-6 h-6 text-green-500" />
             </div>
           </div>
         </div>
@@ -174,7 +172,7 @@ const RoomManagement: React.FC = () => {
               </p>
             </div>
             <div className="p-3 bg-purple-50 rounded-lg">
-              <div className="w-6 h-6 bg-purple-500 rounded"></div>
+              <BarChart2 className="w-6 h-6 text-purple-500" />
             </div>
           </div>
         </div>

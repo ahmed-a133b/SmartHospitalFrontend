@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useHospitalData } from '../../../../contexts/HospitalDataContext';
-import { Plus, Search, Edit, Wifi, WifiOff, Battery, AlertTriangle, Thermometer, Droplets, Wind, User, UserCheck, UserX, Info, InfoIcon } from 'lucide-react';
+import { Plus, Search, Edit, Wifi, WifiOff, Battery, AlertTriangle, Thermometer, Droplets, Wind, User, UserCheck, UserX, Info, InfoIcon, Volume2, CloudRain, Sun } from 'lucide-react';
 import { getLatestVitals, isVitalReading, isEnvironmentalReading } from '../../../../utils/deviceUtils';
 import { assignPatientToMonitor, unassignPatientFromMonitor, getAvailablePatientsForMonitor } from '../../../../api/patientMonitorAssignment';
 import { API_BASE_URL } from '../../../../api/config';
@@ -430,7 +430,7 @@ const DeviceManagement: React.FC = () => {
               <p className="text-3xl font-bold text-gray-900 mt-1">{Object.keys(iotDevices).length}</p>
             </div>
             <div className="p-3 bg-blue-50 rounded-lg">
-              <div className="w-6 h-6 bg-blue-500 rounded"></div>
+              <div className="w-6 h-6 bg-blue-500 rounded" />
             </div>
           </div>
         </div>
@@ -645,22 +645,31 @@ const DeviceManagement: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-2">
-                          <div className="text-xs text-yellow-700 font-medium">CO2</div>
-                          <div className="text-sm font-bold text-yellow-800">
-                            {typeof latestVitals.co2Level === 'number' ? latestVitals.co2Level.toFixed(1) : 'N/A'} ppm
+                        <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-2 flex items-center space-x-2">
+                          <CloudRain className="h-4 w-4 text-yellow-500" />
+                          <div>
+                            <div className="text-xs text-yellow-700 font-medium">CO2</div>
+                            <div className="text-sm font-bold text-yellow-800">
+                              {typeof latestVitals.co2Level === 'number' ? latestVitals.co2Level.toFixed(1) : 'N/A'} ppm
+                            </div>
                           </div>
                         </div>
-                        <div className="bg-purple-50 border border-purple-100 rounded-lg p-2">
-                          <div className="text-xs text-purple-700 font-medium">Light</div>
-                          <div className="text-sm font-bold text-purple-800">
-                            {typeof latestVitals.lightLevel === 'number' ? latestVitals.lightLevel.toFixed(1) : 'N/A'} lux
+                        <div className="bg-purple-50 border border-purple-100 rounded-lg p-2 flex items-center space-x-2">
+                          <Sun className="h-4 w-4 text-purple-500" />
+                          <div>
+                            <div className="text-xs text-purple-700 font-medium">Light</div>
+                            <div className="text-sm font-bold text-purple-800">
+                              {typeof latestVitals.lightLevel === 'number' ? latestVitals.lightLevel.toFixed(1) : 'N/A'} lux
+                            </div>
                           </div>
                         </div>
-                        <div className="bg-orange-50 border border-orange-100 rounded-lg p-2">
-                          <div className="text-xs text-orange-700 font-medium">Noise</div>
-                          <div className="text-sm font-bold text-orange-800">
-                            {typeof latestVitals.noiseLevel === 'number' ? latestVitals.noiseLevel.toFixed(1) : 'N/A'} dB
+                        <div className="bg-orange-50 border border-orange-100 rounded-lg p-2 flex items-center space-x-2">
+                          <Volume2 className="h-4 w-4 text-orange-500" />
+                          <div>
+                            <div className="text-xs text-orange-700 font-medium">Noise</div>
+                            <div className="text-sm font-bold text-orange-800">
+                              {typeof latestVitals.noiseLevel === 'number' ? latestVitals.noiseLevel.toFixed(1) : 'N/A'} dB
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -716,22 +725,31 @@ const DeviceManagement: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                        <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-2">
-                          <div className="text-xs text-yellow-700 font-medium">CO2</div>
-                          <div className="text-sm font-bold text-yellow-800">
-                            {typeof latestVitals.co2Level === 'number' ? latestVitals.co2Level.toFixed(1) : 'N/A'} ppm
+                        <div className="bg-yellow-50 border border-yellow-100 rounded-lg p-2 flex items-center space-x-2">
+                          <CloudRain className="h-4 w-4 text-yellow-500" />
+                          <div>
+                            <div className="text-xs text-yellow-700 font-medium">CO2</div>
+                            <div className="text-sm font-bold text-yellow-800">
+                              {typeof latestVitals.co2Level === 'number' ? latestVitals.co2Level.toFixed(1) : 'N/A'} ppm
+                            </div>
                           </div>
                         </div>
-                        <div className="bg-purple-50 border border-purple-100 rounded-lg p-2">
-                          <div className="text-xs text-purple-700 font-medium">Light</div>
-                          <div className="text-sm font-bold text-purple-800">
-                            {typeof latestVitals.lightLevel === 'number' ? latestVitals.lightLevel.toFixed(1) : 'N/A'} lux
+                        <div className="bg-purple-50 border border-purple-100 rounded-lg p-2 flex items-center space-x-2">
+                          <Sun className="h-4 w-4 text-purple-500" />
+                          <div>
+                            <div className="text-xs text-purple-700 font-medium">Light</div>
+                            <div className="text-sm font-bold text-purple-800">
+                              {typeof latestVitals.lightLevel === 'number' ? latestVitals.lightLevel.toFixed(1) : 'N/A'} lux
+                            </div>
                           </div>
                         </div>
-                        <div className="bg-orange-50 border border-orange-100 rounded-lg p-2">
-                          <div className="text-xs text-orange-700 font-medium">Noise</div>
-                          <div className="text-sm font-bold text-orange-800">
-                            {typeof latestVitals.noiseLevel === 'number' ? latestVitals.noiseLevel.toFixed(1) : 'N/A'} dB
+                        <div className="bg-orange-50 border border-orange-100 rounded-lg p-2 flex items-center space-x-2">
+                          <Volume2 className="h-4 w-4 text-orange-500" />
+                          <div>
+                            <div className="text-xs text-orange-700 font-medium">Noise</div>
+                            <div className="text-sm font-bold text-orange-800">
+                              {typeof latestVitals.noiseLevel === 'number' ? latestVitals.noiseLevel.toFixed(1) : 'N/A'} dB
+                            </div>
                           </div>
                         </div>
                       </div>

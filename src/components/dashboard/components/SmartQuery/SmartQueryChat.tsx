@@ -51,7 +51,7 @@ const SmartQueryChat: React.FC = () => {
     // Add welcome message
     setMessages([
       { 
-        text: "Hello! I'm your Smart Hospital Assistant. You can ask me about patient status, room occupancy, or alerts.", 
+        text: "👋 Hello! I'm your Smart Hospital Assistant. \n\nI can help you with:\n• Patient information and vitals\n• Room status and environmental data\n• Alerts and risk assessments\n\nTry asking me something like 'Show critical patients' or 'Show vitals for room 1'!", 
         isUser: false, 
         timestamp: new Date() 
       }
@@ -116,8 +116,22 @@ const SmartQueryChat: React.FC = () => {
       setMessages(prev => [...prev, assistantMessage]);
     } catch (error) {
       console.error('Error processing query:', error);
+      
+      let errorMsg = "I'm sorry, I couldn't process that request. ";
+      if (error instanceof Error) {
+        if (error.message.includes('timed out')) {
+          errorMsg += "The request timed out. Please try again.";
+        } else if (error.message.includes('Failed to fetch')) {
+          errorMsg += "I couldn't connect to the hospital database. Please check if the server is running.";
+        } else {
+          errorMsg += "Please try rephrasing your question or ask for help.";
+        }
+      } else {
+        errorMsg += "Please try again or ask for help to see available commands.";
+      }
+      
       setMessages(prev => [...prev, {
-        text: "I'm sorry, I couldn't process that query. Please try again.",
+        text: errorMsg,
         isUser: false,
         timestamp: new Date()
       }]);
@@ -147,7 +161,7 @@ const SmartQueryChat: React.FC = () => {
                 <div className="text-xs font-semibold text-gray-600 mb-1">
                   {message.isUser ? 'You' : 'Assistant'}
                 </div>
-                <div className="text-sm text-gray-900">{message.text}</div>
+                <div className="text-sm text-gray-900 whitespace-pre-line">{message.text}</div>
                 
                 {message.data && (
                   <div className="mt-3 p-3 bg-gray-100 rounded border max-h-48 overflow-y-auto">

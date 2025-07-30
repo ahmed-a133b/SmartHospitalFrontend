@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useHospitalData } from '../../../../contexts/HospitalDataContext';
-import { TrendingUp, TrendingDown, Activity, Clock, Heart, Thermometer, Droplets, User, ChevronDown } from 'lucide-react';
+import { TrendingUp, TrendingDown, Activity, Clock, Heart, Thermometer, Droplets, User, ChevronDown, Calendar } from 'lucide-react';
 
 const Analytics: React.FC = () => {
   const { patients, staff, iotDevices, loading, error, refreshAlertsOnly } = useHospitalData();
   const [selectedVital, setSelectedVital] = useState<'heartRate' | 'temperature' | 'oxygenLevel'>('heartRate');
   const [selectedPatient, setSelectedPatient] = useState<string>('');
+  const [selectedTimePeriod, setSelectedTimePeriod] = useState<'hour' | 'week' | 'month' | 'year'>('hour');
 
   // Get list of patients for dropdown
   const patientsList = useMemo(() => {
@@ -43,7 +44,38 @@ const Analytics: React.FC = () => {
     if (!patient) return [];
 
     const now = new Date();
-    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    let timeRange: Date;
+    let dataPointInterval: number;
+    let totalDataPoints: number;
+    
+    // Configure time range and data point intervals based on selected period
+    switch (selectedTimePeriod) {
+      case 'hour':
+        timeRange = new Date(now.getTime() - 60 * 60 * 1000); // 1 hour ago
+        dataPointInterval = 5 * 60 * 1000; // 5 minutes
+        totalDataPoints = 12; // 12 data points
+        break;
+      case 'week':
+        timeRange = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000); // 1 week ago
+        dataPointInterval = 4 * 60 * 60 * 1000; // 4 hours
+        totalDataPoints = 42; // 42 data points (7 days * 6 points per day)
+        break;
+      case 'month':
+        timeRange = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000); // 1 month ago
+        dataPointInterval = 24 * 60 * 60 * 1000; // 1 day
+        totalDataPoints = 30; // 30 data points
+        break;
+      case 'year':
+        timeRange = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000); // 1 year ago
+        dataPointInterval = 7 * 24 * 60 * 60 * 1000; // 1 week
+        totalDataPoints = 52; // 52 data points
+        break;
+      default:
+        timeRange = new Date(now.getTime() - 60 * 60 * 1000);
+        dataPointInterval = 5 * 60 * 1000;
+        totalDataPoints = 12;
+    }
+    
     const dataPoints = [];
     
     // Generate realistic vital trends based on patient's current status
@@ -57,21 +89,42 @@ const Analytics: React.FC = () => {
 
     const base = baseValues[patientStatus as keyof typeof baseValues] || baseValues.stable;
     
-    // Generate data points every 5 minutes for the past hour
-    for (let i = 0; i <= 12; i++) {
-      const timestamp = new Date(oneHourAgo.getTime() + i * 5 * 60 * 1000);
+    // Generate data points based on the selected time period
+    for (let i = 0; i <= totalDataPoints; i++) {
+      const timestamp = new Date(timeRange.getTime() + i * dataPointInterval);
       
-      // Add realistic variations based on patient condition
+      // Add realistic variations based on patient condition and time period
       const variationFactor = patientStatus === 'critical' ? 1.5 : patientStatus === 'stable' ? 0.5 : 1.0;
+      const timeBasedVariation = selectedTimePeriod === 'year' ? 2.0 : selectedTimePeriod === 'month' ? 1.5 : 1.0;
       
       const vitals = {
-        heartRate: base.heartRate + Math.sin(i * 0.5) * 8 * variationFactor + (Math.random() - 0.5) * 10 * variationFactor,
-        temperature: base.temperature + Math.sin(i * 0.3) * 0.6 * variationFactor + (Math.random() - 0.5) * 0.8 * variationFactor,
-        oxygenLevel: base.oxygenLevel + Math.sin(i * 0.4) * 1.2 * variationFactor + (Math.random() - 0.5) * 1.5 * variationFactor
+        heartRate: base.heartRate + Math.sin(i * 0.5) * 8 * variationFactor * timeBasedVariation + (Math.random() - 0.5) * 10 * variationFactor,
+        temperature: base.temperature + Math.sin(i * 0.3) * 0.6 * variationFactor * timeBasedVariation + (Math.random() - 0.5) * 0.8 * variationFactor,
+        oxygenLevel: base.oxygenLevel + Math.sin(i * 0.4) * 1.2 * variationFactor * timeBasedVariation + (Math.random() - 0.5) * 1.5 * variationFactor
       };
       
+      // Format timestamp based on time period
+      let timeLabel: string;
+      switch (selectedTimePeriod) {
+        case 'hour':
+          timeLabel = timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+          break;
+        case 'week':
+          // For week view, show day name and date for better readability
+          timeLabel = timestamp.toLocaleDateString('en-US', { weekday: 'short', day: 'numeric' });
+          break;
+        case 'month':
+          timeLabel = timestamp.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          break;
+        case 'year':
+          timeLabel = timestamp.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+          break;
+        default:
+          timeLabel = timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+      }
+      
       dataPoints.push({
-        timestamp: timestamp.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        timestamp: timeLabel,
         heartRate: Math.max(50, Math.min(120, Math.round(vitals.heartRate))),
         temperature: Math.max(96, Math.min(102, Math.round(vitals.temperature * 10) / 10)),
         oxygenLevel: Math.max(85, Math.min(100, Math.round(vitals.oxygenLevel * 10) / 10))
@@ -79,7 +132,7 @@ const Analytics: React.FC = () => {
     }
     
     return dataPoints;
-  }, [selectedPatient, patients]);
+  }, [selectedPatient, patients, selectedTimePeriod]);
 
   // Get selected patient info
   const selectedPatientInfo = useMemo(() => {
@@ -213,9 +266,38 @@ const Analytics: React.FC = () => {
         
         {/* X-axis labels */}
         <div className="flex justify-between mt-2 text-xs text-gray-600" style={{ paddingLeft: `${leftPadding}px`, paddingRight: `${rightPadding}px` }}>
-          <span>{data[0]?.timestamp}</span>
-          <span>{data[Math.floor(data.length / 2)]?.timestamp}</span>
-          <span>{data[data.length - 1]?.timestamp}</span>
+          {(() => {
+            // Show different number of labels based on data length and avoid cluttering
+            const dataLength = data.length;
+            let labelIndices: number[] = [];
+            
+            if (dataLength <= 15) {
+              // For hour data (12-15 points) - show start, middle, end
+              labelIndices = [0, Math.floor(dataLength / 2), dataLength - 1];
+            } else if (dataLength <= 25) {
+              // For smaller datasets - show 4 points
+              labelIndices = [0, Math.floor(dataLength / 3), Math.floor(dataLength * 2 / 3), dataLength - 1];
+            } else if (dataLength <= 45) {
+              // For week data (around 42 points) - show 5 strategic points
+              labelIndices = [0, Math.floor(dataLength / 4), Math.floor(dataLength / 2), Math.floor(dataLength * 3 / 4), dataLength - 1];
+            } else {
+              // For month/year data - show 6 points max
+              labelIndices = [
+                0, 
+                Math.floor(dataLength / 5), 
+                Math.floor(dataLength * 2 / 5), 
+                Math.floor(dataLength * 3 / 5), 
+                Math.floor(dataLength * 4 / 5), 
+                dataLength - 1
+              ];
+            }
+            
+            return labelIndices.map((index, i) => (
+              <span key={i} className="text-center flex-1">
+                {data[index]?.timestamp}
+              </span>
+            ));
+          })()}
         </div>
       </div>
     );
@@ -430,10 +512,31 @@ const Analytics: React.FC = () => {
       {/* Patient Vital Trends */}
       <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Patient Vital Trends - Past Hour</h2>
+          <h2 className="text-lg font-semibold text-gray-900">
+            Patient Vital Trends - Past {selectedTimePeriod === 'hour' ? 'Hour' : 
+                                          selectedTimePeriod === 'week' ? 'Week' : 
+                                          selectedTimePeriod === 'month' ? 'Month' : 'Year'}
+          </h2>
           
-          {/* Patient Selector */}
+          {/* Patient and Time Period Selectors */}
           <div className="flex items-center space-x-4">
+            {/* Time Period Selector */}
+            <div className="relative flex items-center">
+              <Calendar className="absolute left-3 h-4 w-4 text-gray-500 pointer-events-none" />
+              <select
+                value={selectedTimePeriod}
+                onChange={(e) => setSelectedTimePeriod(e.target.value as 'hour' | 'week' | 'month' | 'year')}
+                className="appearance-none bg-white border border-gray-300 rounded-lg pl-10 pr-8 py-2 text-sm font-medium text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="hour">Past Hour</option>
+                <option value="week">Past Week</option>
+                <option value="month">Past Month</option>
+                <option value="year">Past Year</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-500 pointer-events-none" />
+            </div>
+            
+            {/* Patient Selector */}
             <div className="relative">
               <select
                 value={selectedPatient}
