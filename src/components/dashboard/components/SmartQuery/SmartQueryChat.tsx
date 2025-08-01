@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Mic, MicOff, Send, Loader } from 'lucide-react';
+import { Mic, MicOff, Send, Loader, Volume2, VolumeX, Settings } from 'lucide-react';
 import { processChatQuery } from '../../../../services/queryService';
+import { ttsService, initializeGoogleTTS, setVoicePreferences } from '../../../../services/textToSpeechService';
 
 // TypeScript declarations for Speech Recognition API
 declare global {
@@ -22,6 +23,13 @@ const SmartQueryChat: React.FC = () => {
   const [input, setInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
+  const [showVoiceSettings, setShowVoiceSettings] = useState(false);
+  const [googleAPIKey, setGoogleAPIKey] = useState('');
+  const [useGoogleTTS, setUseGoogleTTS] = useState(false);
+  const [voiceRate, setVoiceRate] = useState(1.0);
+  const [voicePitch, setVoicePitch] = useState(1.0);
   const recognition = useRef<any>(null);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
@@ -49,13 +57,20 @@ const SmartQueryChat: React.FC = () => {
     }
     
     // Add welcome message
-    setMessages([
-      { 
-        text: "👋 Hello! I'm your Smart Hospital Assistant. \n\nI can help you with:\n• Patient information and vitals\n• Room status and environmental data\n• Alerts and risk assessments\n\nTry asking me something like 'Show critical patients' or 'Show vitals for room 1'!", 
-        isUser: false, 
-        timestamp: new Date() 
+    const welcomeMessage = {
+      text: "👋 Hello! I'm your Smart Hospital Assistant with voice capabilities! \n\n🎙️ **Voice Features:**\n• I can speak responses back to you\n• Click the 🔊 icon to toggle voice on/off\n• Click ⚙️ to configure voice settings\n• Use Google Cloud TTS for higher quality voice\n\n💬 **I can help you with:**\n• Patient information and vitals\n• Room status and environmental data\n• Alerts and risk assessments\n\nTry asking me something like 'Show critical patients' or 'Show vitals for room 1'!", 
+      isUser: false, 
+      timestamp: new Date() 
+    };
+    
+    setMessages([welcomeMessage]);
+    
+    // Speak welcome message if voice is enabled
+    setTimeout(() => {
+      if (voiceEnabled) {
+        speakMessage("Hello! I'm your Smart Hospital Assistant. I can help you with patient information, room status, and alerts. You can ask me questions using voice or text.");
       }
-    ]);
+    }, 1000);
     
     return () => {
       if (recognition.current) {
@@ -68,8 +83,46 @@ const SmartQueryChat: React.FC = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Initialize TTS service with settings
+  useEffect(() => {
+    if (googleAPIKey) {
+      initializeGoogleTTS(googleAPIKey);
+    }
+    
+    setVoicePreferences({
+      rate: voiceRate,
+      pitch: voicePitch,
+      useGoogleTTS: useGoogleTTS && !!googleAPIKey
+    });
+  }, [googleAPIKey, useGoogleTTS, voiceRate, voicePitch]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const speakMessage = async (text: string) => {
+    if (!voiceEnabled) return;
+    
+    try {
+      setIsSpeaking(true);
+      await ttsService.speak(text);
+    } catch (error) {
+      console.error('Error speaking message:', error);
+    } finally {
+      setIsSpeaking(false);
+    }
+  };
+
+  const stopSpeaking = () => {
+    ttsService.stop();
+    setIsSpeaking(false);
+  };
+
+  const toggleVoice = () => {
+    if (ttsService.isSpeaking()) {
+      stopSpeaking();
+    }
+    setVoiceEnabled(!voiceEnabled);
   };
 
   const toggleRecording = () => {
@@ -114,6 +167,11 @@ const SmartQueryChat: React.FC = () => {
       };
       
       setMessages(prev => [...prev, assistantMessage]);
+      
+      // Speak the assistant's response if voice is enabled
+      if (voiceEnabled) {
+        setTimeout(() => speakMessage(response.message), 100);
+      }
     } catch (error) {
       console.error('Error processing query:', error);
       
@@ -199,6 +257,28 @@ const SmartQueryChat: React.FC = () => {
       </div>
       
       <div className="flex p-4 bg-white border-t border-gray-200 space-x-2">
+        {/* Voice Settings Button */}
+        <button
+          onClick={() => setShowVoiceSettings(!showVoiceSettings)}
+          className="p-2 text-gray-600 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+          title="Voice settings"
+        >
+          <Settings className="h-5 w-5" />
+        </button>
+        
+        {/* Voice Toggle Button */}
+        <button
+          onClick={toggleVoice}
+          className={`p-2 rounded-lg transition-colors ${
+            voiceEnabled 
+              ? 'text-green-600 hover:text-green-700 hover:bg-green-50' 
+              : 'text-gray-400 hover:text-gray-500 hover:bg-gray-100'
+          } ${isSpeaking ? 'animate-pulse' : ''}`}
+          title={voiceEnabled ? 'Voice enabled (click to disable)' : 'Voice disabled (click to enable)'}
+        >
+          {voiceEnabled && !isSpeaking ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+        </button>
+        
         <div className="flex-1 relative">
           <input
             type="text"
@@ -227,6 +307,80 @@ const SmartQueryChat: React.FC = () => {
           {isProcessing ? <Loader className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
         </button>
       </div>
+      
+      {/* Voice Settings Panel */}
+      {showVoiceSettings && (
+        <div className="p-4 bg-gray-50 border-t border-gray-200">
+          <h4 className="text-sm font-semibold text-gray-900 mb-3">Voice Settings</h4>
+          
+          {/* Google TTS Toggle */}
+          <div className="mb-3">
+            <label className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                checked={useGoogleTTS}
+                onChange={(e) => setUseGoogleTTS(e.target.checked)}
+                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm text-gray-700">Use Google Cloud Text-to-Speech (higher quality)</span>
+            </label>
+          </div>
+          
+          {/* Google API Key Input */}
+          {useGoogleTTS && (
+            <div className="mb-3">
+              <label className="block text-xs text-gray-600 mb-1">Google Cloud TTS API Key</label>
+              <input
+                type="password"
+                value={googleAPIKey}
+                onChange={(e) => setGoogleAPIKey(e.target.value)}
+                placeholder="Enter your Google Cloud TTS API key"
+                className="w-full px-3 py-2 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Get your API key from Google Cloud Console → Text-to-Speech API
+              </p>
+            </div>
+          )}
+          
+          {/* Voice Speed */}
+          <div className="mb-3">
+            <label className="block text-xs text-gray-600 mb-1">Speed: {voiceRate.toFixed(1)}x</label>
+            <input
+              type="range"
+              min="0.5"
+              max="2.0"
+              step="0.1"
+              value={voiceRate}
+              onChange={(e) => setVoiceRate(parseFloat(e.target.value))}
+              className="w-full"
+            />
+          </div>
+          
+          {/* Voice Pitch */}
+          <div className="mb-3">
+            <label className="block text-xs text-gray-600 mb-1">Pitch: {voicePitch.toFixed(1)}</label>
+            <input
+              type="range"
+              min="0.5"
+              max="1.5"
+              step="0.1"
+              value={voicePitch}
+              onChange={(e) => setVoicePitch(parseFloat(e.target.value))}
+              className="w-full"
+            />
+          </div>
+          
+          {/* Test Voice Button */}
+          <button
+            onClick={() => speakMessage("Hello! This is a test of the voice assistant. How does this sound?")}
+            disabled={isSpeaking}
+            className="w-full px-3 py-2 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {isSpeaking ? 'Speaking...' : 'Test Voice'}
+          </button>
+        </div>
+      )}
     </div>
   );
 };
