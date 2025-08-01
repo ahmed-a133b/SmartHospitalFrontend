@@ -48,10 +48,6 @@ export default class Api {
         }
     }
 
-    private static ensureTrailingSlash(url: string): string {
-        return url.endsWith('/') ? url : `${url}/`;
-    }
-
     private static async fetchWithTimeout(
         url: string,
         options: RequestInit = {}
@@ -60,9 +56,8 @@ export default class Api {
         const id = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
 
         try {
-            // Ensure URL has trailing slash for FastAPI
-            const urlWithSlash = this.ensureTrailingSlash(url);
-            const response = await fetch(urlWithSlash, {
+            console.log('🌐 Fetching URL:', url);
+            const response = await fetch(url, {
                 ...options,
                 signal: controller.signal,
             });
@@ -76,20 +71,38 @@ export default class Api {
 
     static async get<T = any>(endpoint: string, params?: Record<string, string>): Promise<ApiResponse<T>> {
         try {
-            const url = new URL(`${API_BASE_URL}${endpoint}`);
+            // Ensure API_BASE_URL is valid
+            if (!API_BASE_URL) {
+                throw new Error('API_BASE_URL is not configured');
+            }
+
+            // Clean up endpoint to avoid double slashes
+            const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+            const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+            
+            const finalUrl = `${baseUrl}${cleanEndpoint}`;
+            console.log('🌐 Final API URL:', finalUrl);
+            console.log('🔗 Base URL:', baseUrl);
+            console.log('🔗 Endpoint:', cleanEndpoint);
+            
+            const url = new URL(finalUrl);
             if (params) {
                 Object.entries(params).forEach(([key, value]) => {
                     url.searchParams.append(key, value);
                 });
             }
 
+            console.log('🚀 Making GET request to:', url.toString());
+
             const response = await this.fetchWithTimeout(url.toString(), {
                 method: 'GET',
                 headers: DEFAULT_HEADERS,
             });
 
+            console.log('📥 Response status:', response.status, response.statusText);
             return this.handleResponse<T>(response);
         } catch (error) {
+            console.error('API GET Error:', error);
             return {
                 error: error instanceof Error ? error.message : 'Network error',
                 status: 500,
@@ -99,7 +112,16 @@ export default class Api {
 
     static async post<T = any>(endpoint: string, data: any): Promise<ApiResponse<T>> {
         try {
-            const response = await this.fetchWithTimeout(`${API_BASE_URL}${endpoint}`, {
+            // Ensure API_BASE_URL is valid
+            if (!API_BASE_URL) {
+                throw new Error('API_BASE_URL is not configured');
+            }
+
+            // Clean up endpoint to avoid double slashes
+            const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+            const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+            
+            const response = await this.fetchWithTimeout(`${baseUrl}${cleanEndpoint}`, {
                 method: 'POST',
                 headers: DEFAULT_HEADERS,
                 body: JSON.stringify(data),
@@ -107,6 +129,7 @@ export default class Api {
 
             return this.handleResponse<T>(response);
         } catch (error) {
+            console.error('API POST Error:', error);
             return {
                 error: error instanceof Error ? error.message : 'Network error',
                 status: 500,
@@ -116,7 +139,16 @@ export default class Api {
 
     static async put<T = any>(endpoint: string, data: any): Promise<ApiResponse<T>> {
         try {
-            const response = await this.fetchWithTimeout(`${API_BASE_URL}${endpoint}`, {
+            // Ensure API_BASE_URL is valid
+            if (!API_BASE_URL) {
+                throw new Error('API_BASE_URL is not configured');
+            }
+
+            // Clean up endpoint to avoid double slashes
+            const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+            const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+            
+            const response = await this.fetchWithTimeout(`${baseUrl}${cleanEndpoint}`, {
                 method: 'PUT',
                 headers: DEFAULT_HEADERS,
                 body: JSON.stringify(data),
@@ -124,6 +156,7 @@ export default class Api {
 
             return this.handleResponse<T>(response);
         } catch (error) {
+            console.error('API PUT Error:', error);
             return {
                 error: error instanceof Error ? error.message : 'Network error',
                 status: 500,
@@ -133,13 +166,23 @@ export default class Api {
 
     static async delete<T = any>(endpoint: string): Promise<ApiResponse<T>> {
         try {
-            const response = await this.fetchWithTimeout(`${API_BASE_URL}${endpoint}`, {
+            // Ensure API_BASE_URL is valid
+            if (!API_BASE_URL) {
+                throw new Error('API_BASE_URL is not configured');
+            }
+
+            // Clean up endpoint to avoid double slashes
+            const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+            const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL.slice(0, -1) : API_BASE_URL;
+            
+            const response = await this.fetchWithTimeout(`${baseUrl}${cleanEndpoint}`, {
                 method: 'DELETE',
                 headers: DEFAULT_HEADERS,
             });
 
             return this.handleResponse<T>(response);
         } catch (error) {
+            console.error('API DELETE Error:', error);
             return {
                 error: error instanceof Error ? error.message : 'Network error',
                 status: 500,

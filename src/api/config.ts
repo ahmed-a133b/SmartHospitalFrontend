@@ -1,5 +1,38 @@
 // Base URL for the backend API
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+export const API_BASE_URL = baseUrl.trim(); // Remove any trailing/leading spaces
+
+// Validate API configuration
+export const validateApiConfig = () => {
+    if (!API_BASE_URL) {
+        throw new Error('API_BASE_URL is not configured. Please check your environment variables.');
+    }
+    
+    try {
+        new URL(API_BASE_URL);
+    } catch (error) {
+        throw new Error(`Invalid API_BASE_URL: ${API_BASE_URL}. Please provide a valid URL.`);
+    }
+    
+    console.log('API Configuration:', { API_BASE_URL });
+    return true;
+};
+
+// Check if API server is reachable
+export const checkApiHealth = async (): Promise<boolean> => {
+    try {
+        // Use /docs endpoint since it's available and reliable
+        const response = await fetch(`${API_BASE_URL}/docs`, { 
+            method: 'GET',
+            mode: 'cors'
+        });
+        console.log('API health check response:', response.status, response.statusText);
+        return response.ok;
+    } catch (error) {
+        console.warn('API health check failed:', error);
+        return false;
+    }
+};
 // Feature flags
 export const FEATURES = {
   VOICE_RECOGNITION: true,
@@ -67,7 +100,22 @@ export const ENDPOINTS = {
         base: '/staff/',
         getAll: '/staff/',
         getById: (id: string) => `/staff/${id}/`,
+        create: '/staff/',
+        update: (id: string) => `/staff/${id}/`,
+        delete: (id: string) => `/staff/${id}/`,
         schedule: (id: string) => `/staff/${id}/schedule/`,
+        updateSchedule: (id: string, date: string) => `/staff/${id}/schedule/${date}/`,
+        bulkSchedule: (id: string) => `/staff/${id}/schedule/bulk/`,
+        status: (id: string) => `/staff/${id}/status/`,
+        dutyStatus: (id: string) => `/staff/${id}/duty-status/`,
+        patients: (id: string) => `/staff/${id}/patients/`,
+        workloadHistory: (id: string) => `/staff/${id}/workload-history/`,
+        stats: '/staff/stats/',
+        onDuty: '/staff/on-duty/',
+        byWard: (wardId: string) => `/staff/by-ward/${wardId}/`,
+        load: '/staff/load/',
+        departments: '/staff/departments/',
+        search: '/staff/search/',
     },
 
     // Predictions endpoints

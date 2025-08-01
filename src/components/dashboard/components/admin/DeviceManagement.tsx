@@ -382,23 +382,7 @@ const DeviceManagement: React.FC = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-900">IoT Device Management</h1>
         <div className="flex space-x-3">
-          {/* <button 
-            onClick={fetchAllEnvironmentalVitals}
-            disabled={fetchingEnvVitals}
-            className="flex items-center space-x-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors duration-200 disabled:opacity-50"
-          >
-            {fetchingEnvVitals ? (
-              <>
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                <span>Refreshing...</span>
-              </>
-            ) : (
-              <>
-                <Thermometer className="h-5 w-5" />
-                <span>Refresh Env Sensors</span>
-              </>
-            )}
-          </button> */}
+          
           <button 
             onClick={() => setShowAddForm(true)}
             className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
@@ -769,12 +753,12 @@ const DeviceManagement: React.FC = () => {
                   Last calibrated: {formatTimestamp(device.deviceInfo?.lastCalibrated)}
                 </div>
                 <div className="flex space-x-2">
-                  <button className="text-blue-600 hover:text-blue-800 text-sm font-medium px-3 py-1 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors">
+                  {/* <button className="text-blue-600 hover:text-blue-800 text-sm font-medium px-3 py-1 bg-white border border-blue-200 rounded-md hover:bg-blue-50 transition-colors">
                     <InfoIcon className="h-4 w-4" />
                   </button>
                   <button className="text-gray-600 hover:text-gray-800 p-1 bg-white border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
                     <Edit className="h-4 w-4" />
-                  </button>
+                  </button> */}
                 </div>
               </div>
             </div>
