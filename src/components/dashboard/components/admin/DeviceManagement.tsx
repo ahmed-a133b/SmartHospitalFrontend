@@ -108,7 +108,7 @@ const DeviceManagement: React.FC = () => {
   const fetchVitalMonitorVitals = async (monitorId: string) => {
     try {
       console.log(`Fetching vital monitor vitals for monitor: ${monitorId}`);
-      const response = await fetch(`${API_BASE_URL}/iotData/vitals-monitors/${monitorId}/vitals/latest`);
+      const response = await fetch(`${API_BASE_URL}/iotData/${monitorId}/vitals/latest`);
       console.log(`Response status for ${monitorId}:`, response.status);
       
       if (response.ok) {
@@ -116,20 +116,21 @@ const DeviceManagement: React.FC = () => {
         console.log(`Vital monitor vitals data for ${monitorId}:`, data);
         
         // Extract the actual readings from the nested structure
-        if (data.readings) {
-          // Merge the top-level info with the readings
+        if (data.data) {
+          // The backend returns {timestamp, data, patientId}
           const vitals = {
-            ...data.readings,
-            deviceStatus: data.deviceStatus || data.readings.deviceStatus,
-            batteryLevel: data.batteryLevel || data.readings.batteryLevel,
-            signalStrength: data.signalStrength || data.readings.signalStrength,
-            timestamp: data.timestamp || data.readings.timestamp
+            ...data.data,
+            deviceStatus: data.data.deviceStatus || 'online', // Default to online if not specified
+            batteryLevel: data.data.batteryLevel,
+            signalStrength: data.data.signalStrength,
+            timestamp: data.timestamp,
+            patientId: data.patientId
           };
           console.log(`Processed vital monitor vitals for ${monitorId}:`, vitals);
           return vitals;
         } else {
           // Fallback to the original data structure
-          return data.data || data || null;
+          return data || null;
         }
       } else {
         console.warn(`Failed to fetch vitals for ${monitorId}:`, response.status, response.statusText);
