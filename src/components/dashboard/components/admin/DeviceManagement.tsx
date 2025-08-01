@@ -102,6 +102,44 @@ const DeviceManagement: React.FC = () => {
   const [availablePatients, setAvailablePatients] = useState<any[]>([]);
   const [showPatientAssignment, setShowPatientAssignment] = useState<string | null>(null);
   const [envSensorVitals, setEnvSensorVitals] = useState<Record<string, any>>({});
+  const [vitalMonitorVitals, setVitalMonitorVitals] = useState<Record<string, any>>({});
+
+  // Function to fetch vital monitor vitals directly from API
+  const fetchVitalMonitorVitals = async (monitorId: string) => {
+    try {
+      console.log(`Fetching vital monitor vitals for monitor: ${monitorId}`);
+      const response = await fetch(`${API_BASE_URL}/iotData/vitals-monitors/${monitorId}/vitals/latest`);
+      console.log(`Response status for ${monitorId}:`, response.status);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`Vital monitor vitals data for ${monitorId}:`, data);
+        
+        // Extract the actual readings from the nested structure
+        if (data.readings) {
+          // Merge the top-level info with the readings
+          const vitals = {
+            ...data.readings,
+            deviceStatus: data.deviceStatus || data.readings.deviceStatus,
+            batteryLevel: data.batteryLevel || data.readings.batteryLevel,
+            signalStrength: data.signalStrength || data.readings.signalStrength,
+            timestamp: data.timestamp || data.readings.timestamp
+          };
+          console.log(`Processed vital monitor vitals for ${monitorId}:`, vitals);
+          return vitals;
+        } else {
+          // Fallback to the original data structure
+          return data.data || data || null;
+        }
+      } else {
+        console.warn(`Failed to fetch vitals for ${monitorId}:`, response.status, response.statusText);
+      }
+      return null;
+    } catch (error) {
+      console.error(`Error fetching vital monitor vitals for ${monitorId}:`, error);
+      return null;
+    }
+  };
 
   // Function to fetch environmental sensor vitals directly from API
   const fetchEnvironmentalSensorVitals = async (sensorId: string) => {
@@ -166,10 +204,37 @@ const DeviceManagement: React.FC = () => {
     }
   };
 
+  // Function to fetch all vital monitor vitals
+  const fetchAllVitalMonitorVitals = async () => {
+    try {
+      const vitalMonitors = Object.entries(iotDevices).filter(([_, device]) => 
+        device.deviceInfo?.type === 'vitals_monitor'
+      );
+
+      const vitalsPromises = vitalMonitors.map(async ([monitorId, _]) => {
+        const vitals = await fetchVitalMonitorVitals(monitorId);
+        return { monitorId, vitals };
+      });
+
+      const results = await Promise.all(vitalsPromises);
+      const vitalsMap = results.reduce((acc, { monitorId, vitals }) => {
+        if (vitals) {
+          acc[monitorId] = vitals;
+        }
+        return acc;
+      }, {} as Record<string, any>);
+
+      setVitalMonitorVitals(vitalsMap);
+    } catch (error) {
+      console.error('Error fetching vital monitor vitals:', error);
+    }
+  };
+
   // Fetch environmental vitals when component mounts or devices change
   useEffect(() => {
     if (Object.keys(iotDevices).length > 0) {
       fetchAllEnvironmentalVitals();
+      fetchAllVitalMonitorVitals();
     }
   }, [iotDevices]);
 
@@ -181,6 +246,12 @@ const DeviceManagement: React.FC = () => {
     if (device.deviceInfo?.type === 'environmental_sensor' && envSensorVitals[deviceId]) {
       console.log(`Using fetched environmental vitals for ${deviceId}:`, envSensorVitals[deviceId]);
       return envSensorVitals[deviceId];
+    }
+    
+    // For vital monitors, use directly fetched vitals
+    if (device.deviceInfo?.type === 'vitals_monitor' && vitalMonitorVitals[deviceId]) {
+      console.log(`Using fetched vital monitor vitals for ${deviceId}:`, vitalMonitorVitals[deviceId]);
+      return vitalMonitorVitals[deviceId];
     }
     
     // For other devices, use the utility function
@@ -586,6 +657,18 @@ const DeviceManagement: React.FC = () => {
                           onClick={() => fetchEnvironmentalSensorVitals(id).then(vitals => {
                             if (vitals) {
                               setEnvSensorVitals(prev => ({ ...prev, [id]: vitals }));
+                            }
+                          })}
+                          className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
+                        >
+                          🔄 Refresh
+                        </button>
+                      )}
+                      {isVitalsMonitor && (
+                        <button
+                          onClick={() => fetchVitalMonitorVitals(id).then(vitals => {
+                            if (vitals) {
+                              setVitalMonitorVitals(prev => ({ ...prev, [id]: vitals }));
                             }
                           })}
                           className="text-xs text-blue-600 hover:text-blue-800 font-medium px-2 py-1 bg-blue-50 rounded-md hover:bg-blue-100 transition-colors"
